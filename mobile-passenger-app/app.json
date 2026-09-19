@@ -1,0 +1,27 @@
+{
+  "expo": {
+    "name": "WakaBus",
+    "slug": "wakabus-passenger",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/app-icon.png",
+    "splash": {
+      "image": "./assets/app-icon.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#0B2E8A"
+    },
+    "android": {
+      "package": "com.wakabus.passenger",
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/app-icon.png",
+        "backgroundColor": "#0B2E8A"
+      }
+    },
+    "ios": {
+      "bundleIdentifier": "com.wakabus.passenger"
+    },
+    "web": {
+      "favicon": "./assets/app-icon.png"
+    }
+  }
+}
