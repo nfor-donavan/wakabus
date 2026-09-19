@@ -32,7 +32,21 @@ app.use((err, req, res, next) => {
 
 const PORT = process.env.PORT || 5000;
 
+// Last-resort safety net. Every route is now wrapped in asyncHandler, so a
+// rejected promise inside a controller should already turn into a clean
+// next(err) -> the error handler above -> a 500 response. This just makes
+// sure that ANY stray rejection that somehow slips past that (a bad
+// dependency, a background timer, etc.) gets logged loudly instead of
+// silently crashing the whole process the way it did before asyncHandler
+// existed.
+process.on("unhandledRejection", (reason) => {
+  console.error("Unhandled promise rejection (server stayed up):", reason);
+});
+process.on("uncaughtException", (err) => {
+  console.error("Uncaught exception (server stayed up):", err);
+});
+
 connectDB().then(() => {
   startReservationExpiryJob();
-  app.listen(PORT, () => console.log(`Bus platform API running on port ${PORT}`));
+  app.listen(PORT, () => console.log(`WakaBus API running on port ${PORT}`));
 });

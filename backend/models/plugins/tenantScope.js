@@ -8,6 +8,16 @@
  * delete/count query and THROWS if tenantId is not present in the filter,
  * unless the query was explicitly marked with .setOptions({ skipTenantScope: true })
  * (only Super Admin controllers are allowed to do that).
+ *
+ * EXCEPTION — queries filtered by _id: when Mongoose runs .populate("busId"),
+ * it internally fires a second query like Bus.find({ _id: { $in: [...] } })
+ * with no tenantId in it at all. That's not a leak — the referenced _ids
+ * only ever got onto the parent document (e.g. Schedule.busId) through code
+ * that already enforced tenantId when it was set, so looking them up by
+ * their own _id is inherently safe. Blocking it would just throw on every
+ * legitimate populate() call. So a query scoped by _id is allowed through
+ * without a tenantId, while a blanket find({}) or find({status: ...}) with
+ * no tenantId and no _id still throws exactly as before.
  */
 const SCOPED_OPS = [
   "find",
@@ -35,10 +45,13 @@ function tenantScope(schema) {
         filter.tenantId !== undefined &&
         filter.tenantId !== null;
 
-      if (!hasTenantId) {
+      const hasIdFilter =
+        filter && Object.prototype.hasOwnProperty.call(filter, "_id") && filter._id !== undefined;
+
+      if (!hasTenantId && !hasIdFilter) {
         return next(
           new Error(
-            `Tenant isolation violation: "${op}" on "${this.model.modelName}" was called without a tenantId filter. ` +
+            `Tenant isolation violation: "${op}" on "${this.model.modelName}" was called without a tenantId or _id filter. ` +
               `Pass tenantId explicitly, or .setOptions({ skipTenantScope: true }) for verified Super Admin routes only.`
           )
         );
@@ -49,3 +62,4 @@ function tenantScope(schema) {
 }
 
 module.exports = tenantScope;
+
