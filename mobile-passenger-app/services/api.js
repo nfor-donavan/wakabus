@@ -1,6 +1,6 @@
-const API_BASE = "https://your-backend.onrender.com/api";
-// ^ Replace with your deployed backend URL (or http://<your-LAN-IP>:5000/api
-// for local dev — "localhost" won't reach your machine from a physical phone).
+const API_BASE = "https://wakabus-backend.onrender.com/api";
+// Your live Render backend. If your Render service name is different,
+// swap it in here before building.
 
 async function request(path, { method = "GET", body } = {}) {
   const res = await fetch(`${API_BASE}${path}`, {
@@ -21,7 +21,8 @@ export const api = {
     return request(`/passenger/search-companies?${params.toString()}`);
   },
 
-  reserveSeat: (payload) => request("/passenger/reserve", { method: "POST", body: payload }),
+  reserveSeat: (payload) =>
+    request("/passenger/reserve", { method: "POST", body: payload }),
 
   getBookingStatus: (bookingId, tenantId) =>
     request(`/passenger/bookings/${bookingId}/status?tenantId=${tenantId}`),
