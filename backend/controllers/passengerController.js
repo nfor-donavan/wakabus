@@ -19,6 +19,20 @@ function buildDateRange(date) {
   return { $gte: start, $lte: end };
 }
 
+// City names are typed by hand in two different places (the admin dashboard
+// when creating a route, and the passenger app when searching) — an exact
+// string match means "Yaoundé" and "yaounde " (different case, a stray
+// space, or a differently-typed accent) silently match nothing, with no
+// error at all. Normalizing both sides before comparing makes that entire
+// class of mismatch stop being a problem.
+function normalizeCity(str) {
+  return (str || "")
+    .trim()
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, ""); // strip accents: "é" -> "e"
+}
+
 // GET /api/passenger/search?tenantId=&departureCity=&destinationCity=&date=
 // Single-company search — used when the passenger already picked a company.
 exports.searchSchedules = async (req, res) => {
@@ -41,17 +55,30 @@ exports.searchSchedules = async (req, res) => {
     status: "Scheduled",
     ...(departureTimeFilter && { departureTime: departureTimeFilter }),
   })
-    .populate({
-      path: "routeId",
-      match: {
-        ...(departureCity && { departureCity }),
-        ...(destinationCity && { destinationCity }),
-      },
-    })
+    .populate("routeId")
     .populate("busId");
 
-  // populate + match can leave routeId null for non-matching docs — filter those out.
-  res.json(schedules.filter((s) => s.routeId));
+  const wantDeparture = departureCity ? normalizeCity(departureCity) : null;
+  const wantDestination = destinationCity
+    ? normalizeCity(destinationCity)
+    : null;
+
+  res.json(
+    schedules.filter((s) => {
+      if (!s.routeId) return false;
+      if (
+        wantDeparture &&
+        normalizeCity(s.routeId.departureCity) !== wantDeparture
+      )
+        return false;
+      if (
+        wantDestination &&
+        normalizeCity(s.routeId.destinationCity) !== wantDestination
+      )
+        return false;
+      return true;
+    }),
+  );
 };
 
 // GET /api/passenger/search-companies?departureCity=&destinationCity=&date=
@@ -83,13 +110,21 @@ exports.searchAcrossCompanies = async (req, res) => {
     ...(departureTimeFilter && { departureTime: departureTimeFilter }),
   })
     .setOptions({ skipTenantScope: true })
-    .populate({ path: "routeId", match: { departureCity, destinationCity } })
+    .populate("routeId")
     .populate("busId")
     .populate("tenantId", "companyName logoUrl");
 
+  const wantDeparture = normalizeCity(departureCity);
+  const wantDestination = normalizeCity(destinationCity);
+
   res.json(
     schedules
-      .filter((s) => s.routeId)
+      .filter(
+        (s) =>
+          s.routeId &&
+          normalizeCity(s.routeId.departureCity) === wantDeparture &&
+          normalizeCity(s.routeId.destinationCity) === wantDestination,
+      )
       .sort((a, b) => new Date(a.departureTime) - new Date(b.departureTime)),
   );
 };
