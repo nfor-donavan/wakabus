@@ -76,6 +76,37 @@ exports.updateScheduleStatus = async (req, res) => {
   res.json(schedule);
 };
 
+// DELETE /api/agency/schedules/:scheduleId
+// For cleaning up mistakes — a schedule created twice, a typo'd departure
+// time, etc. Deliberately refuses to delete a schedule that has any active
+// (Pending or Paid) booking on it, so this can't be used to quietly make a
+// paying passenger's seat disappear — cancel those bookings first. Any
+// already-Cancelled/Expired/Failed booking records for the schedule are
+// cleaned up alongside it, since they carry no live seat or revenue.
+exports.deleteSchedule = async (req, res) => {
+  const { scheduleId } = req.params;
+
+  const schedule = await Schedule.findOne({ _id: scheduleId, tenantId: req.user.tenantId });
+  if (!schedule) return res.status(404).json({ message: "Schedule not found" });
+
+  const activeBookingCount = await Booking.countDocuments({
+    tenantId: req.user.tenantId,
+    scheduleId,
+    paymentStatus: { $in: ["Pending", "Paid"] },
+  });
+
+  if (activeBookingCount > 0) {
+    return res.status(400).json({
+      message: `Cannot delete — ${activeBookingCount} active booking(s) exist on this schedule. Cancel them first.`,
+    });
+  }
+
+  await Booking.deleteMany({ tenantId: req.user.tenantId, scheduleId });
+  await Schedule.deleteOne({ _id: scheduleId, tenantId: req.user.tenantId });
+
+  res.json({ message: "Schedule deleted" });
+};
+
 // Counter-agent cancellation with a refund reference recorded for reconciliation.
 // GET /api/agency/schedules/:scheduleId/bookings
 exports.listBookingsForSchedule = async (req, res) => {

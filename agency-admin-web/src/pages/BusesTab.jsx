@@ -1,7 +1,9 @@
 import React, { useEffect, useState } from "react";
 import { api } from "../api.js";
+import { useLanguage } from "../i18n.jsx";
 
 export default function BusesTab() {
+  const { t } = useLanguage();
   const [buses, setBuses] = useState([]);
   const [form, setForm] = useState({
     registrationNumber: "",
@@ -38,11 +40,11 @@ export default function BusesTab() {
   return (
     <>
       <div className="card">
-        <h2>Register a bus</h2>
+        <h2>{t("busesTab.registerTitle")}</h2>
         <form onSubmit={handleCreate}>
           <div className="form-row">
             <input
-              placeholder="Registration number (e.g. LT 123-OA)"
+              placeholder={t("busesTab.regNumberPlaceholder")}
               value={form.registrationNumber}
               onChange={(e) => setForm({ ...form, registrationNumber: e.target.value })}
               required
@@ -56,34 +58,34 @@ export default function BusesTab() {
             </select>
             <input
               type="number"
-              placeholder="Total seats"
+              placeholder={t("busesTab.seatsPlaceholder")}
               value={form.totalSeats}
               onChange={(e) => setForm({ ...form, totalSeats: e.target.value })}
               required
             />
             <input
-              placeholder="Seating layout"
+              placeholder={t("busesTab.layoutPlaceholder")}
               value={form.seatingLayout}
               onChange={(e) => setForm({ ...form, seatingLayout: e.target.value })}
             />
           </div>
           {error && <p className="error-text">{error}</p>}
           <button className="primary" type="submit">
-            Add bus
+            {t("busesTab.addButton")}
           </button>
         </form>
       </div>
 
       <div className="card">
-        <h2>Fleet</h2>
+        <h2>{t("busesTab.fleetTitle")}</h2>
         <table>
           <thead>
             <tr>
-              <th>Registration</th>
-              <th>Class</th>
-              <th>Seats</th>
-              <th>Layout</th>
-              <th>Status</th>
+              <th>{t("busesTab.registration")}</th>
+              <th>{t("busesTab.class")}</th>
+              <th>{t("busesTab.seats")}</th>
+              <th>{t("busesTab.layout")}</th>
+              <th>{t("common.status")}</th>
             </tr>
           </thead>
           <tbody>
@@ -93,13 +95,13 @@ export default function BusesTab() {
                 <td>{b.busClass}</td>
                 <td>{b.totalSeats}</td>
                 <td>{b.seatingLayout}</td>
-                <td>{b.isActive ? "Active" : "Inactive"}</td>
+                <td>{b.isActive ? t("busesTab.active") : t("busesTab.inactive")}</td>
               </tr>
             ))}
             {buses.length === 0 && (
               <tr>
                 <td colSpan={5} className="muted">
-                  No buses registered yet.
+                  {t("busesTab.none")}
                 </td>
               </tr>
             )}

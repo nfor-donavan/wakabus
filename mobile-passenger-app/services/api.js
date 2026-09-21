@@ -21,8 +21,7 @@ export const api = {
     return request(`/passenger/search-companies?${params.toString()}`);
   },
 
-  reserveSeat: (payload) =>
-    request("/passenger/reserve", { method: "POST", body: payload }),
+  reserveSeat: (payload) => request("/passenger/reserve", { method: "POST", body: payload }),
 
   getBookingStatus: (bookingId, tenantId) =>
     request(`/passenger/bookings/${bookingId}/status?tenantId=${tenantId}`),

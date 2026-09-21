@@ -1,7 +1,9 @@
 import React, { useEffect, useState } from "react";
 import { api } from "../api.js";
+import { useLanguage } from "../i18n.jsx";
 
 export default function TenantsTab() {
+  const { t } = useLanguage();
   const [tenants, setTenants] = useState([]);
   const [form, setForm] = useState({
     companyName: "",
@@ -31,7 +33,7 @@ export default function TenantsTab() {
     setSuccess("");
     try {
       await api.createTenant(form);
-      setSuccess(`${form.companyName} onboarded — admin login sent to ${form.adminEmail}.`);
+      setSuccess(t("tenantsTab.successMessage", { company: form.companyName, email: form.adminEmail }));
       setForm({ companyName: "", contactPhone: "", adminFullName: "", adminEmail: "", adminPassword: "" });
       load();
     } catch (err) {
@@ -60,38 +62,38 @@ export default function TenantsTab() {
   return (
     <>
       <div className="card">
-        <h2>Onboard a new transport company</h2>
+        <h2>{t("tenantsTab.onboardTitle")}</h2>
         <form onSubmit={handleCreate}>
           <div className="form-row">
             <input
-              placeholder="Company name (e.g. Finexs Voyage)"
+              placeholder={t("tenantsTab.companyName")}
               value={form.companyName}
               onChange={(e) => setForm({ ...form, companyName: e.target.value })}
               required
             />
             <input
-              placeholder="Contact phone"
+              placeholder={t("tenantsTab.contactPhone")}
               value={form.contactPhone}
               onChange={(e) => setForm({ ...form, contactPhone: e.target.value })}
             />
           </div>
           <div className="form-row">
             <input
-              placeholder="Agency admin full name"
+              placeholder={t("tenantsTab.adminName")}
               value={form.adminFullName}
               onChange={(e) => setForm({ ...form, adminFullName: e.target.value })}
               required
             />
             <input
               type="email"
-              placeholder="Agency admin email"
+              placeholder={t("tenantsTab.adminEmail")}
               value={form.adminEmail}
               onChange={(e) => setForm({ ...form, adminEmail: e.target.value })}
               required
             />
             <input
               type="password"
-              placeholder="Temporary password"
+              placeholder={t("tenantsTab.tempPassword")}
               value={form.adminPassword}
               onChange={(e) => setForm({ ...form, adminPassword: e.target.value })}
               required
@@ -100,43 +102,43 @@ export default function TenantsTab() {
           {error && <p className="error-text">{error}</p>}
           {success && <p style={{ color: "var(--success)", fontSize: 13 }}>{success}</p>}
           <button className="primary" type="submit">
-            Create tenant
+            {t("tenantsTab.createButton")}
           </button>
         </form>
       </div>
 
       <div className="card">
-        <h2>Transport companies</h2>
+        <h2>{t("tenantsTab.listTitle")}</h2>
         <table>
           <thead>
             <tr>
-              <th>Company</th>
-              <th>Contact</th>
-              <th>Commission %</th>
-              <th>Status</th>
+              <th>{t("tenantsTab.company")}</th>
+              <th>{t("tenantsTab.contact")}</th>
+              <th>{t("tenantsTab.commission")}</th>
+              <th>{t("common.status")}</th>
               <th></th>
             </tr>
           </thead>
           <tbody>
-            {tenants.map((t) => (
-              <tr key={t._id}>
-                <td>{t.companyName}</td>
-                <td>{t.contactPhone || "—"}</td>
+            {tenants.map((tenant) => (
+              <tr key={tenant._id}>
+                <td>{tenant.companyName}</td>
+                <td>{tenant.contactPhone || "—"}</td>
                 <td>
                   <input
                     type="number"
-                    defaultValue={t.commissionRate}
+                    defaultValue={tenant.commissionRate}
                     style={{ width: 70, minWidth: 0 }}
-                    onBlur={(e) => handleCommissionChange(t, e.target.value)}
+                    onBlur={(e) => handleCommissionChange(tenant, e.target.value)}
                   />
                 </td>
-                <td>{t.isActive ? "Active" : "Suspended"}</td>
+                <td>{tenant.isActive ? t("tenantsTab.active") : t("tenantsTab.suspended")}</td>
                 <td>
                   <button
-                    className={t.isActive ? "danger" : "secondary"}
-                    onClick={() => handleToggleActive(t)}
+                    className={tenant.isActive ? "danger" : "secondary"}
+                    onClick={() => handleToggleActive(tenant)}
                   >
-                    {t.isActive ? "Suspend" : "Reactivate"}
+                    {tenant.isActive ? t("tenantsTab.suspend") : t("tenantsTab.reactivate")}
                   </button>
                 </td>
               </tr>
@@ -144,7 +146,7 @@ export default function TenantsTab() {
             {tenants.length === 0 && (
               <tr>
                 <td colSpan={5} className="muted">
-                  No transport companies onboarded yet.
+                  {t("tenantsTab.none")}
                 </td>
               </tr>
             )}

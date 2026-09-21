@@ -1,7 +1,9 @@
 import React, { useEffect, useState } from "react";
 import { api } from "../api.js";
+import { useLanguage } from "../i18n.jsx";
 
 export default function BookingsTab() {
+  const { t } = useLanguage();
   const [schedules, setSchedules] = useState([]);
   const [selectedScheduleId, setSelectedScheduleId] = useState("");
   const [bookings, setBookings] = useState([]);
@@ -25,9 +27,7 @@ export default function BookingsTab() {
   }
 
   async function handleCancel(bookingId) {
-    const refundReference = window.prompt(
-      "If this booking was already Paid, enter a refund reference (leave blank if unpaid):"
-    );
+    const refundReference = window.prompt(t("bookingsTab.refundPrompt"));
     try {
       await api.cancelBooking(bookingId, refundReference || undefined);
       loadBookings(selectedScheduleId);
@@ -38,10 +38,10 @@ export default function BookingsTab() {
 
   return (
     <div className="card">
-      <h2>Bookings by schedule</h2>
+      <h2>{t("bookingsTab.title")}</h2>
       <div className="form-row">
         <select value={selectedScheduleId} onChange={(e) => loadBookings(e.target.value)}>
-          <option value="">Select a schedule…</option>
+          <option value="">{t("bookingsTab.selectSchedule")}</option>
           {schedules.map((s) => (
             <option key={s._id} value={s._id}>
               {s.routeId ? `${s.routeId.departureCity} → ${s.routeId.destinationCity}` : s._id} —{" "}
@@ -56,13 +56,13 @@ export default function BookingsTab() {
         <table>
           <thead>
             <tr>
-              <th>Seat</th>
-              <th>Passenger</th>
-              <th>Phone</th>
-              <th>Ticket code</th>
-              <th>Fare</th>
-              <th>Source</th>
-              <th>Status</th>
+              <th>{t("bookingsTab.seat")}</th>
+              <th>{t("bookingsTab.passenger")}</th>
+              <th>{t("bookingsTab.phone")}</th>
+              <th>{t("bookingsTab.ticketCode")}</th>
+              <th>{t("bookingsTab.fare")}</th>
+              <th>{t("bookingsTab.source")}</th>
+              <th>{t("common.status")}</th>
               <th></th>
             </tr>
           </thead>
@@ -81,7 +81,7 @@ export default function BookingsTab() {
                 <td>
                   {!["Cancelled", "Refunded"].includes(b.paymentStatus) && (
                     <button className="danger" onClick={() => handleCancel(b._id)}>
-                      Cancel
+                      {t("common.cancel")}
                     </button>
                   )}
                 </td>
@@ -89,8 +89,8 @@ export default function BookingsTab() {
             ))}
             {bookings.length === 0 && (
               <tr>
-                <td colSpan={7} className="muted">
-                  No bookings for this schedule yet.
+                <td colSpan={8} className="muted">
+                  {t("bookingsTab.none")}
                 </td>
               </tr>
             )}

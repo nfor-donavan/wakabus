@@ -1,7 +1,9 @@
 import React, { useEffect, useState } from "react";
 import { api } from "../api.js";
+import { useLanguage } from "../i18n.jsx";
 
 export default function SchedulesTab() {
+  const { t } = useLanguage();
   const [schedules, setSchedules] = useState([]);
   const [buses, setBuses] = useState([]);
   const [routes, setRoutes] = useState([]);
@@ -62,14 +64,34 @@ export default function SchedulesTab() {
     }
   }
 
+  async function handleDelete(schedule) {
+    const label = schedule.routeId
+      ? `${schedule.routeId.departureCity} → ${schedule.routeId.destinationCity}`
+      : "—";
+    const confirmed = window.confirm(
+      t("schedulesTab.deleteConfirm", {
+        route: label,
+        date: new Date(schedule.departureTime).toLocaleString(),
+      })
+    );
+    if (!confirmed) return;
+
+    try {
+      await api.deleteSchedule(schedule._id);
+      load();
+    } catch (err) {
+      setError(err.message);
+    }
+  }
+
   return (
     <>
       <div className="card">
-        <h2>Create a schedule</h2>
+        <h2>{t("schedulesTab.createTitle")}</h2>
         <form onSubmit={handleCreate}>
           <div className="form-row">
             <select value={form.busId} onChange={(e) => setForm({ ...form, busId: e.target.value })} required>
-              <option value="">Select bus</option>
+              <option value="">{t("schedulesTab.selectBus")}</option>
               {buses.map((b) => (
                 <option key={b._id} value={b._id}>
                   {b.registrationNumber} ({b.busClass}, {b.totalSeats} seats)
@@ -81,7 +103,7 @@ export default function SchedulesTab() {
               onChange={(e) => setForm({ ...form, routeId: e.target.value })}
               required
             >
-              <option value="">Select route</option>
+              <option value="">{t("schedulesTab.selectRoute")}</option>
               {routes.map((r) => (
                 <option key={r._id} value={r._id}>
                   {r.departureCity} → {r.destinationCity}
@@ -102,22 +124,23 @@ export default function SchedulesTab() {
           </div>
           {error && <p className="error-text">{error}</p>}
           <button className="primary" type="submit">
-            Create schedule
+            {t("schedulesTab.createButton")}
           </button>
         </form>
       </div>
 
       <div className="card">
-        <h2>Upcoming schedules</h2>
+        <h2>{t("schedulesTab.upcoming")}</h2>
         <table>
           <thead>
             <tr>
-              <th>Route</th>
-              <th>Bus</th>
-              <th>Departure</th>
-              <th>Seats left</th>
-              <th>Status</th>
-              <th>Manifest</th>
+              <th>{t("schedulesTab.route")}</th>
+              <th>{t("schedulesTab.bus")}</th>
+              <th>{t("schedulesTab.departure")}</th>
+              <th>{t("schedulesTab.seatsLeft")}</th>
+              <th>{t("common.status")}</th>
+              <th>{t("schedulesTab.manifest")}</th>
+              <th></th>
             </tr>
           </thead>
           <tbody>
@@ -140,15 +163,20 @@ export default function SchedulesTab() {
                 </td>
                 <td>
                   <button className="secondary" onClick={() => handleDownloadManifest(s._id)}>
-                    Download PDF
+                    {t("schedulesTab.downloadPdf")}
+                  </button>
+                </td>
+                <td>
+                  <button className="danger" onClick={() => handleDelete(s)}>
+                    {t("schedulesTab.deleteButton")}
                   </button>
                 </td>
               </tr>
             ))}
             {schedules.length === 0 && (
               <tr>
-                <td colSpan={6} className="muted">
-                  No schedules yet.
+                <td colSpan={7} className="muted">
+                  {t("schedulesTab.none")}
                 </td>
               </tr>
             )}

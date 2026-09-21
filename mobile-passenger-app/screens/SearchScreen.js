@@ -23,9 +23,20 @@ export default function SearchScreen({ navigation }) {
       Alert.alert("Missing info", "Enter both a departure and destination city.");
       return;
     }
+    if (date && !/^\d{4}-\d{2}-\d{2}$/.test(date.trim())) {
+      Alert.alert(
+        "Check the date",
+        "Enter the date as YYYY-MM-DD (e.g. 2026-09-25), or leave it blank to see every upcoming trip."
+      );
+      return;
+    }
     setLoading(true);
     try {
-      const schedules = await api.searchCompanies(departureCity, destinationCity, date || undefined);
+      const schedules = await api.searchCompanies(
+        departureCity.trim(),
+        destinationCity.trim(),
+        date ? date.trim() : undefined
+      );
       navigation.navigate("Results", { schedules, departureCity, destinationCity });
     } catch (err) {
       Alert.alert("Search failed", err.message);

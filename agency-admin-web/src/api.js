@@ -37,6 +37,7 @@ export const api = {
   createSchedule: (payload) => request("/agency/schedules", { method: "POST", body: payload }),
   updateScheduleStatus: (scheduleId, status) =>
     request(`/agency/schedules/${scheduleId}/status`, { method: "PATCH", body: { status } }),
+  deleteSchedule: (scheduleId) => request(`/agency/schedules/${scheduleId}`, { method: "DELETE" }),
 
   cancelBooking: (bookingId, refundReference) =>
     request(`/agency/bookings/${bookingId}/cancel`, {
@@ -48,6 +49,12 @@ export const api = {
   downloadManifestPdf: (scheduleId) =>
     request(`/agency/schedules/${scheduleId}/manifest`, { isBlob: true }),
   getManifestJson: (scheduleId) => request(`/agency/schedules/${scheduleId}/manifest-json`),
+
+  listRentals: () => request("/agency/rentals"),
+  createRental: (payload) => request("/agency/rentals", { method: "POST", body: payload }),
+  updateRental: (rentalId, payload) =>
+    request(`/agency/rentals/${rentalId}`, { method: "PATCH", body: payload }),
+  deleteRental: (rentalId) => request(`/agency/rentals/${rentalId}`, { method: "DELETE" }),
 
   getToken,
 };

@@ -1,7 +1,9 @@
 import React, { useEffect, useState } from "react";
 import { api } from "../api.js";
+import { useLanguage } from "../i18n.jsx";
 
 export default function RevenueTab() {
+  const { t } = useLanguage();
   const [rows, setRows] = useState([]);
   const [tenants, setTenants] = useState([]);
   const [error, setError] = useState("");
@@ -15,15 +17,15 @@ export default function RevenueTab() {
       .catch((err) => setError(err.message));
   }, []);
 
-  function tenant(tenantId) {
-    return tenants.find((t) => t._id === tenantId);
+  function findTenant(tenantId) {
+    return tenants.find((item) => item._id === tenantId);
   }
 
   const totalBookings = rows.reduce((sum, r) => sum + r.totalBookings, 0);
   const totalRevenue = rows.reduce((sum, r) => sum + (r.totalRevenue || 0), 0);
   const totalCommission = rows.reduce((sum, r) => {
-    const t = tenant(r._id);
-    const rate = t ? t.commissionRate : 0;
+    const tenant = findTenant(r._id);
+    const rate = tenant ? tenant.commissionRate : 0;
     return sum + (r.totalRevenue || 0) * (rate / 100);
   }, 0);
 
@@ -35,15 +37,15 @@ export default function RevenueTab() {
     <>
       <div className="card" style={{ display: "flex", gap: 32 }}>
         <div>
-          <div className="muted">Total paid bookings</div>
+          <div className="muted">{t("revenueTab.totalBookings")}</div>
           <div style={{ fontSize: 24, fontWeight: 700 }}>{totalBookings}</div>
         </div>
         <div>
-          <div className="muted">Gross ticket revenue</div>
+          <div className="muted">{t("revenueTab.grossRevenue")}</div>
           <div style={{ fontSize: 24, fontWeight: 700 }}>{formatXAF(totalRevenue)}</div>
         </div>
         <div>
-          <div className="muted">Platform commission earned</div>
+          <div className="muted">{t("revenueTab.commissionEarned")}</div>
           <div style={{ fontSize: 24, fontWeight: 700, color: "var(--gold)" }}>
             {formatXAF(totalCommission)}
           </div>
@@ -51,31 +53,27 @@ export default function RevenueTab() {
       </div>
 
       <div className="card">
-        <h2>Revenue by company</h2>
-        <p className="muted">
-          Gross revenue is the sum of fares on Paid bookings. Commission is calculated at each
-          company's current commission rate — it's an estimate for past bookings if the rate has
-          changed since they were made.
-        </p>
+        <h2>{t("revenueTab.byCompany")}</h2>
+        <p className="muted">{t("revenueTab.explainer")}</p>
         {error && <p className="error-text">{error}</p>}
         <table>
           <thead>
             <tr>
-              <th>Company</th>
-              <th>Paid bookings</th>
-              <th>Gross revenue</th>
-              <th>Commission rate</th>
-              <th>Commission earned</th>
+              <th>{t("revenueTab.company")}</th>
+              <th>{t("revenueTab.paidBookings")}</th>
+              <th>{t("revenueTab.grossRevenueCol")}</th>
+              <th>{t("revenueTab.commissionRate")}</th>
+              <th>{t("revenueTab.commissionEarnedCol")}</th>
             </tr>
           </thead>
           <tbody>
             {rows.map((r) => {
-              const t = tenant(r._id);
-              const rate = t ? t.commissionRate : 0;
+              const tenant = findTenant(r._id);
+              const rate = tenant ? tenant.commissionRate : 0;
               const commission = (r.totalRevenue || 0) * (rate / 100);
               return (
                 <tr key={r._id}>
-                  <td>{t ? t.companyName : r._id}</td>
+                  <td>{tenant ? tenant.companyName : r._id}</td>
                   <td>{r.totalBookings}</td>
                   <td>{formatXAF(r.totalRevenue || 0)}</td>
                   <td>{rate}%</td>
@@ -86,7 +84,7 @@ export default function RevenueTab() {
             {rows.length === 0 && (
               <tr>
                 <td colSpan={5} className="muted">
-                  No paid bookings recorded yet.
+                  {t("revenueTab.none")}
                 </td>
               </tr>
             )}

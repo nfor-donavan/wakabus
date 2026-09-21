@@ -1,7 +1,9 @@
 import React, { useEffect, useState } from "react";
 import { api } from "../api.js";
+import { useLanguage } from "../i18n.jsx";
 
 export default function RoutesTab() {
+  const { t } = useLanguage();
   const [routes, setRoutes] = useState([]);
   const [form, setForm] = useState({ departureCity: "", destinationCity: "", basePrice: 5000 });
   const [error, setError] = useState("");
@@ -33,24 +35,24 @@ export default function RoutesTab() {
   return (
     <>
       <div className="card">
-        <h2>Add a route</h2>
+        <h2>{t("routesTab.addTitle")}</h2>
         <form onSubmit={handleCreate}>
           <div className="form-row">
             <input
-              placeholder="Departure city (e.g. Yaoundé)"
+              placeholder={t("routesTab.departurePlaceholder")}
               value={form.departureCity}
               onChange={(e) => setForm({ ...form, departureCity: e.target.value })}
               required
             />
             <input
-              placeholder="Destination city (e.g. Douala)"
+              placeholder={t("routesTab.destinationPlaceholder")}
               value={form.destinationCity}
               onChange={(e) => setForm({ ...form, destinationCity: e.target.value })}
               required
             />
             <input
               type="number"
-              placeholder="Base price (XAF)"
+              placeholder={t("routesTab.pricePlaceholder")}
               value={form.basePrice}
               onChange={(e) => setForm({ ...form, basePrice: e.target.value })}
               required
@@ -58,19 +60,19 @@ export default function RoutesTab() {
           </div>
           {error && <p className="error-text">{error}</p>}
           <button className="primary" type="submit">
-            Add route
+            {t("routesTab.addButton")}
           </button>
         </form>
       </div>
 
       <div className="card">
-        <h2>Routes</h2>
+        <h2>{t("routesTab.listTitle")}</h2>
         <table>
           <thead>
             <tr>
-              <th>From</th>
-              <th>To</th>
-              <th>Base price</th>
+              <th>{t("routesTab.from")}</th>
+              <th>{t("routesTab.to")}</th>
+              <th>{t("routesTab.basePrice")}</th>
             </tr>
           </thead>
           <tbody>
@@ -84,7 +86,7 @@ export default function RoutesTab() {
             {routes.length === 0 && (
               <tr>
                 <td colSpan={3} className="muted">
-                  No routes yet.
+                  {t("routesTab.none")}
                 </td>
               </tr>
             )}

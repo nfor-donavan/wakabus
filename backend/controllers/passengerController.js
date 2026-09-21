@@ -37,16 +37,13 @@ function normalizeCity(str) {
 // Single-company search — used when the passenger already picked a company.
 exports.searchSchedules = async (req, res) => {
   const { tenantId, departureCity, destinationCity, date } = req.query;
-  if (!tenantId)
-    return res.status(400).json({ message: "tenantId is required" });
+  if (!tenantId) return res.status(400).json({ message: "tenantId is required" });
 
   let departureTimeFilter;
   if (date) {
     departureTimeFilter = buildDateRange(date);
     if (!departureTimeFilter) {
-      return res
-        .status(400)
-        .json({ message: "date must be in YYYY-MM-DD format" });
+      return res.status(400).json({ message: "date must be in YYYY-MM-DD format" });
     }
   }
 
@@ -59,25 +56,15 @@ exports.searchSchedules = async (req, res) => {
     .populate("busId");
 
   const wantDeparture = departureCity ? normalizeCity(departureCity) : null;
-  const wantDestination = destinationCity
-    ? normalizeCity(destinationCity)
-    : null;
+  const wantDestination = destinationCity ? normalizeCity(destinationCity) : null;
 
   res.json(
     schedules.filter((s) => {
       if (!s.routeId) return false;
-      if (
-        wantDeparture &&
-        normalizeCity(s.routeId.departureCity) !== wantDeparture
-      )
-        return false;
-      if (
-        wantDestination &&
-        normalizeCity(s.routeId.destinationCity) !== wantDestination
-      )
-        return false;
+      if (wantDeparture && normalizeCity(s.routeId.departureCity) !== wantDeparture) return false;
+      if (wantDestination && normalizeCity(s.routeId.destinationCity) !== wantDestination) return false;
       return true;
-    }),
+    })
   );
 };
 
@@ -90,18 +77,14 @@ exports.searchSchedules = async (req, res) => {
 exports.searchAcrossCompanies = async (req, res) => {
   const { departureCity, destinationCity, date } = req.query;
   if (!departureCity || !destinationCity) {
-    return res
-      .status(400)
-      .json({ message: "departureCity and destinationCity are required" });
+    return res.status(400).json({ message: "departureCity and destinationCity are required" });
   }
 
   let departureTimeFilter;
   if (date) {
     departureTimeFilter = buildDateRange(date);
     if (!departureTimeFilter) {
-      return res
-        .status(400)
-        .json({ message: "date must be in YYYY-MM-DD format" });
+      return res.status(400).json({ message: "date must be in YYYY-MM-DD format" });
     }
   }
 
@@ -123,9 +106,9 @@ exports.searchAcrossCompanies = async (req, res) => {
         (s) =>
           s.routeId &&
           normalizeCity(s.routeId.departureCity) === wantDeparture &&
-          normalizeCity(s.routeId.destinationCity) === wantDestination,
+          normalizeCity(s.routeId.destinationCity) === wantDestination
       )
-      .sort((a, b) => new Date(a.departureTime) - new Date(b.departureTime)),
+      .sort((a, b) => new Date(a.departureTime) - new Date(b.departureTime))
   );
 };
 
@@ -147,14 +130,7 @@ exports.reserveSeat = async (req, res) => {
     bookingSource,
   } = req.body;
 
-  if (
-    !tenantId ||
-    !scheduleId ||
-    !seatNumber ||
-    !passengerName ||
-    !passengerIdCard ||
-    !passengerPhone
-  ) {
+  if (!tenantId || !scheduleId || !seatNumber || !passengerName || !passengerIdCard || !passengerPhone) {
     return res.status(400).json({ message: "Missing required booking fields" });
   }
 
@@ -163,12 +139,10 @@ exports.reserveSeat = async (req, res) => {
   const schedule = await Schedule.findOneAndUpdate(
     { _id: scheduleId, tenantId, availableSeats: seatNumber },
     { $pull: { availableSeats: seatNumber } },
-    { new: true },
+    { new: true }
   );
   if (!schedule) {
-    return res
-      .status(400)
-      .json({ message: "Seat already taken or schedule not found" });
+    return res.status(400).json({ message: "Seat already taken or schedule not found" });
   }
 
   try {
@@ -205,7 +179,7 @@ exports.reserveSeat = async (req, res) => {
     // rather than waiting for the expiry cron.
     await Schedule.findOneAndUpdate(
       { _id: scheduleId, tenantId },
-      { $addToSet: { availableSeats: seatNumber } },
+      { $addToSet: { availableSeats: seatNumber } }
     );
     res.status(500).json({ message: "Reservation failed", error: err.message });
   }
@@ -216,8 +190,7 @@ exports.reserveSeat = async (req, res) => {
 exports.getTicket = async (req, res) => {
   const { bookingId } = req.params;
   const { tenantId } = req.query;
-  if (!tenantId)
-    return res.status(400).json({ message: "tenantId is required" });
+  if (!tenantId) return res.status(400).json({ message: "tenantId is required" });
 
   const booking = await Booking.findOne({ _id: bookingId, tenantId }).populate({
     path: "scheduleId",
@@ -225,11 +198,7 @@ exports.getTicket = async (req, res) => {
   });
   if (!booking) return res.status(404).json({ message: "Booking not found" });
   if (booking.paymentStatus !== "Paid") {
-    return res
-      .status(400)
-      .json({
-        message: `Ticket not issued — payment status is ${booking.paymentStatus}`,
-      });
+    return res.status(400).json({ message: `Ticket not issued — payment status is ${booking.paymentStatus}` });
   }
 
   res.json({
@@ -251,11 +220,10 @@ exports.getTicket = async (req, res) => {
 exports.getBookingStatus = async (req, res) => {
   const { bookingId } = req.params;
   const { tenantId } = req.query;
-  if (!tenantId)
-    return res.status(400).json({ message: "tenantId is required" });
+  if (!tenantId) return res.status(400).json({ message: "tenantId is required" });
 
   const booking = await Booking.findOne({ _id: bookingId, tenantId }).select(
-    "paymentStatus holdExpiresAt ticketCode",
+    "paymentStatus holdExpiresAt ticketCode"
   );
   if (!booking) return res.status(404).json({ message: "Booking not found" });
 
