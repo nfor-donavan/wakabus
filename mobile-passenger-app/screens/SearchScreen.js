@@ -11,8 +11,11 @@ import {
   Platform,
 } from "react-native";
 import { api } from "../services/api";
+import { useTheme } from "../context/ThemeContext";
 
 export default function SearchScreen({ navigation }) {
+  const { theme } = useTheme();
+  const styles = createStyles(theme);
   const [departureCity, setDepartureCity] = useState("Yaoundé");
   const [destinationCity, setDestinationCity] = useState("Douala");
   const [date, setDate] = useState(""); // optional, format YYYY-MM-DD
@@ -66,6 +69,7 @@ export default function SearchScreen({ navigation }) {
           value={departureCity}
           onChangeText={setDepartureCity}
           placeholder="Departure city"
+          placeholderTextColor={theme.muted}
         />
 
         <TouchableOpacity style={styles.swapButton} onPress={swapCities}>
@@ -78,6 +82,7 @@ export default function SearchScreen({ navigation }) {
           value={destinationCity}
           onChangeText={setDestinationCity}
           placeholder="Destination city"
+          placeholderTextColor={theme.muted}
         />
 
         <Text style={styles.label}>Date (optional)</Text>
@@ -86,6 +91,7 @@ export default function SearchScreen({ navigation }) {
           value={date}
           onChangeText={setDate}
           placeholder="YYYY-MM-DD"
+          placeholderTextColor={theme.muted}
         />
       </View>
 
@@ -100,34 +106,37 @@ export default function SearchScreen({ navigation }) {
   );
 }
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#F4F6FB", padding: 24, justifyContent: "center" },
-  logo: { width: 72, height: 72, alignSelf: "center", borderRadius: 18, marginBottom: 16 },
-  title: { fontSize: 20, fontWeight: "700", textAlign: "center", color: "#0B2E8A" },
-  subtitle: { fontSize: 13, color: "#6b7280", textAlign: "center", marginBottom: 20 },
-  card: { backgroundColor: "#fff", borderRadius: 14, padding: 18, marginBottom: 20 },
-  label: { fontSize: 12, color: "#6b7280", marginBottom: 4, marginTop: 8 },
-  input: {
-    borderWidth: 1,
-    borderColor: "#e2e6ef",
-    borderRadius: 10,
-    padding: 12,
-    fontSize: 15,
-  },
-  swapButton: { alignSelf: "flex-end", marginTop: 6 },
-  swapText: { color: "#0B2E8A", fontSize: 13, fontWeight: "600" },
-  searchButton: {
-    backgroundColor: "#0B2E8A",
-    borderRadius: 12,
-    paddingVertical: 14,
-    alignItems: "center",
-  },
-  searchButtonText: { color: "#fff", fontWeight: "700", fontSize: 15 },
-  myTicketsLink: {
-    textAlign: "center",
-    color: "#0B2E8A",
-    marginTop: 18,
-    fontWeight: "600",
-    fontSize: 13,
-  },
-});
+function createStyles(theme) {
+  return StyleSheet.create({
+    container: { flex: 1, backgroundColor: theme.bg, padding: 24, justifyContent: "center" },
+    logo: { width: 72, height: 72, alignSelf: "center", borderRadius: 18, marginBottom: 16 },
+    title: { fontSize: 20, fontWeight: "700", textAlign: "center", color: theme.navy },
+    subtitle: { fontSize: 13, color: theme.muted, textAlign: "center", marginBottom: 20 },
+    card: { backgroundColor: theme.card, borderRadius: 14, padding: 18, marginBottom: 20 },
+    label: { fontSize: 12, color: theme.muted, marginBottom: 4, marginTop: 8 },
+    input: {
+      borderWidth: 1,
+      borderColor: theme.border,
+      borderRadius: 10,
+      padding: 12,
+      fontSize: 15,
+      color: theme.text,
+    },
+    swapButton: { alignSelf: "flex-end", marginTop: 6 },
+    swapText: { color: theme.navy, fontSize: 13, fontWeight: "600" },
+    searchButton: {
+      backgroundColor: theme.navy,
+      borderRadius: 12,
+      paddingVertical: 14,
+      alignItems: "center",
+    },
+    searchButtonText: { color: "#fff", fontWeight: "700", fontSize: 15 },
+    myTicketsLink: {
+      textAlign: "center",
+      color: theme.navy,
+      marginTop: 18,
+      fontWeight: "600",
+      fontSize: 13,
+    },
+  });
+}

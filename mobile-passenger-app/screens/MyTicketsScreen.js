@@ -3,6 +3,7 @@ import { View, Text, FlatList, StyleSheet, TouchableOpacity } from "react-native
 import { useFocusEffect } from "@react-navigation/native";
 import QRCode from "react-native-qrcode-svg";
 import { getAllOfflineTickets } from "../services/ticketStorage";
+import { useTheme } from "../context/ThemeContext";
 
 /**
  * Reads straight from AsyncStorage — works with zero connectivity. This is
@@ -10,6 +11,8 @@ import { getAllOfflineTickets } from "../services/ticketStorage";
  * after booking, or booked earlier while they had signal.
  */
 export default function MyTicketsScreen() {
+  const { theme } = useTheme();
+  const styles = createStyles(theme);
   const [tickets, setTickets] = useState([]);
   const [expandedCode, setExpandedCode] = useState(null);
 
@@ -66,14 +69,25 @@ export default function MyTicketsScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#F4F6FB", padding: 16 },
-  card: { backgroundColor: "#fff", borderRadius: 12, padding: 16, marginBottom: 12 },
-  row: { flexDirection: "row", justifyContent: "space-between" },
-  route: { fontSize: 15, fontWeight: "700" },
-  seat: { fontSize: 13, fontWeight: "600", color: "#0B2E8A" },
-  time: { fontSize: 12, color: "#6b7280", marginTop: 4 },
-  code: { fontSize: 12, fontWeight: "600", marginTop: 6, letterSpacing: 0.5 },
-  qrWrapper: { alignItems: "center", marginTop: 14 },
-  empty: { textAlign: "center", color: "#6b7280", marginTop: 40, paddingHorizontal: 20 },
-});
+function createStyles(theme) {
+  return StyleSheet.create({
+    container: { flex: 1, backgroundColor: theme.bg, padding: 16 },
+    card: { backgroundColor: theme.card, borderRadius: 12, padding: 16, marginBottom: 12 },
+    row: { flexDirection: "row", justifyContent: "space-between" },
+    route: { fontSize: 15, fontWeight: "700", color: theme.text },
+    seat: { fontSize: 13, fontWeight: "600", color: theme.navy },
+    time: { fontSize: 12, color: theme.muted, marginTop: 4 },
+    code: { fontSize: 12, fontWeight: "600", marginTop: 6, letterSpacing: 0.5, color: theme.text },
+    // Fixed white background behind the QR — react-native-qrcode-svg already
+    // draws its own white tile, but this keeps the surrounding padding
+    // consistent and readable in dark mode too.
+    qrWrapper: {
+      alignItems: "center",
+      marginTop: 14,
+      backgroundColor: "#fff",
+      borderRadius: 10,
+      paddingVertical: 12,
+    },
+    empty: { textAlign: "center", color: theme.muted, marginTop: 40, paddingHorizontal: 20 },
+  });
+}

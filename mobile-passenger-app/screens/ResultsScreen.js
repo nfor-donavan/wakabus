@@ -1,7 +1,10 @@
 import React from "react";
 import { View, Text, FlatList, TouchableOpacity, StyleSheet } from "react-native";
+import { useTheme } from "../context/ThemeContext";
 
 export default function ResultsScreen({ route, navigation }) {
+  const { theme } = useTheme();
+  const styles = createStyles(theme);
   const { schedules, departureCity, destinationCity } = route.params;
 
   function renderItem({ item }) {
@@ -19,6 +22,7 @@ export default function ResultsScreen({ route, navigation }) {
             scheduleId: item._id,
             availableSeats: item.availableSeats,
             totalSeats: bus?.totalSeats,
+            seatingLayout: bus?.seatingLayout,
             basePrice: item.routeId?.basePrice,
             busClass: bus?.busClass,
           })
@@ -57,19 +61,21 @@ export default function ResultsScreen({ route, navigation }) {
   );
 }
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#F4F6FB", padding: 16 },
-  header: { fontSize: 15, fontWeight: "700", color: "#0B2E8A", marginBottom: 12 },
-  card: {
-    backgroundColor: "#fff",
-    borderRadius: 12,
-    padding: 16,
-    marginBottom: 12,
-  },
-  row: { flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
-  company: { fontSize: 16, fontWeight: "700" },
-  price: { fontSize: 16, fontWeight: "700", color: "#f5a623" },
-  time: { fontSize: 14, color: "#374151", marginTop: 4 },
-  meta: { fontSize: 12, color: "#6b7280", marginTop: 6 },
-  empty: { textAlign: "center", color: "#6b7280", marginTop: 40 },
-});
+function createStyles(theme) {
+  return StyleSheet.create({
+    container: { flex: 1, backgroundColor: theme.bg, padding: 16 },
+    header: { fontSize: 15, fontWeight: "700", color: theme.navy, marginBottom: 12 },
+    card: {
+      backgroundColor: theme.card,
+      borderRadius: 12,
+      padding: 16,
+      marginBottom: 12,
+    },
+    row: { flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
+    company: { fontSize: 16, fontWeight: "700", color: theme.text },
+    price: { fontSize: 16, fontWeight: "700", color: theme.gold },
+    time: { fontSize: 14, color: theme.text, marginTop: 4 },
+    meta: { fontSize: 12, color: theme.muted, marginTop: 6 },
+    empty: { textAlign: "center", color: theme.muted, marginTop: 40 },
+  });
+}

@@ -9,7 +9,7 @@ export default function BusesTab() {
     registrationNumber: "",
     busClass: "Classic",
     totalSeats: 70,
-    seatingLayout: "2x2",
+    seatingLayout: "3+2",
   });
   const [error, setError] = useState("");
 
@@ -30,7 +30,7 @@ export default function BusesTab() {
     setError("");
     try {
       await api.createBus({ ...form, totalSeats: Number(form.totalSeats) });
-      setForm({ registrationNumber: "", busClass: "Classic", totalSeats: 70, seatingLayout: "2x2" });
+      setForm({ registrationNumber: "", busClass: "Classic", totalSeats: 70, seatingLayout: "3+2" });
       load();
     } catch (err) {
       setError(err.message);

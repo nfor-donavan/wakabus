@@ -3,8 +3,11 @@ import { View, Text, StyleSheet, ActivityIndicator, TouchableOpacity } from "rea
 import QRCode from "react-native-qrcode-svg";
 import { api } from "../services/api";
 import { saveTicketOffline } from "../services/ticketStorage";
+import { useTheme } from "../context/ThemeContext";
 
 export default function TicketScreen({ route, navigation }) {
+  const { theme } = useTheme();
+  const styles = createStyles(theme);
   const { bookingId, tenantId, companyName } = route.params;
   const [ticket, setTicket] = useState(null);
   const [error, setError] = useState("");
@@ -34,7 +37,7 @@ export default function TicketScreen({ route, navigation }) {
   if (!ticket) {
     return (
       <View style={styles.center}>
-        <ActivityIndicator size="large" color="#0B2E8A" />
+        <ActivityIndicator size="large" color={theme.navy} />
         <Text style={styles.loadingText}>Issuing your ticket…</Text>
       </View>
     );
@@ -53,6 +56,9 @@ export default function TicketScreen({ route, navigation }) {
           {departure.toLocaleDateString()} · {departure.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
         </Text>
 
+        {/* QR wrapper stays a fixed white card even in dark mode — a QR
+            scanner needs real contrast against the dark modules, and a dark
+            background behind them can make some scanners fail. */}
         <View style={styles.qrWrapper}>
           <QRCode value={ticket.signedQrPayload} size={180} />
         </View>
@@ -86,27 +92,29 @@ export default function TicketScreen({ route, navigation }) {
   );
 }
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#F4F6FB", padding: 20, justifyContent: "center" },
-  center: { flex: 1, alignItems: "center", justifyContent: "center", padding: 20 },
-  loadingText: { marginTop: 12, color: "#6b7280" },
-  errorText: { color: "#d64545", textAlign: "center" },
-  card: { backgroundColor: "#fff", borderRadius: 16, padding: 24, alignItems: "center" },
-  company: { fontSize: 18, fontWeight: "700", color: "#0B2E8A" },
-  route: { fontSize: 15, fontWeight: "600", marginTop: 4 },
-  time: { fontSize: 13, color: "#6b7280", marginBottom: 16 },
-  qrWrapper: { padding: 12, backgroundColor: "#fff", borderRadius: 12, marginBottom: 12 },
-  ticketCode: { fontSize: 16, fontWeight: "700", letterSpacing: 1, marginBottom: 16 },
-  detailsRow: { flexDirection: "row", gap: 24, marginBottom: 12 },
-  detailLabel: { fontSize: 11, color: "#6b7280", textAlign: "center" },
-  detailValue: { fontSize: 14, fontWeight: "700", textAlign: "center" },
-  offlineNote: { fontSize: 11, color: "#9ca3af", textAlign: "center", marginTop: 8 },
-  doneButton: {
-    backgroundColor: "#0B2E8A",
-    borderRadius: 12,
-    paddingVertical: 14,
-    alignItems: "center",
-    marginTop: 20,
-  },
-  doneText: { color: "#fff", fontWeight: "700", fontSize: 15 },
-});
+function createStyles(theme) {
+  return StyleSheet.create({
+    container: { flex: 1, backgroundColor: theme.bg, padding: 20, justifyContent: "center" },
+    center: { flex: 1, alignItems: "center", justifyContent: "center", padding: 20, backgroundColor: theme.bg },
+    loadingText: { marginTop: 12, color: theme.muted },
+    errorText: { color: theme.danger, textAlign: "center" },
+    card: { backgroundColor: theme.card, borderRadius: 16, padding: 24, alignItems: "center" },
+    company: { fontSize: 18, fontWeight: "700", color: theme.navy },
+    route: { fontSize: 15, fontWeight: "600", marginTop: 4, color: theme.text },
+    time: { fontSize: 13, color: theme.muted, marginBottom: 16 },
+    qrWrapper: { padding: 12, backgroundColor: "#fff", borderRadius: 12, marginBottom: 12 },
+    ticketCode: { fontSize: 16, fontWeight: "700", letterSpacing: 1, marginBottom: 16, color: theme.text },
+    detailsRow: { flexDirection: "row", gap: 24, marginBottom: 12 },
+    detailLabel: { fontSize: 11, color: theme.muted, textAlign: "center" },
+    detailValue: { fontSize: 14, fontWeight: "700", textAlign: "center", color: theme.text },
+    offlineNote: { fontSize: 11, color: theme.muted, textAlign: "center", marginTop: 8 },
+    doneButton: {
+      backgroundColor: theme.navy,
+      borderRadius: 12,
+      paddingVertical: 14,
+      alignItems: "center",
+      marginTop: 20,
+    },
+    doneText: { color: "#fff", fontWeight: "700", fontSize: 15 },
+  });
+}

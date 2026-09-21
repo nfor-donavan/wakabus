@@ -10,6 +10,7 @@ import {
   ActivityIndicator,
 } from "react-native";
 import { api } from "../services/api";
+import { useTheme } from "../context/ThemeContext";
 
 /**
  * Full passenger flow from here:
@@ -20,6 +21,8 @@ import { api } from "../services/api";
  * 4. Navigate to the Ticket screen, which fetches and caches the ticket offline.
  */
 export default function BookingScreen({ route, navigation }) {
+  const { theme } = useTheme();
+  const styles = createStyles(theme);
   const { tenantId, companyName, scheduleId, seatNumber, farePaid } = route.params;
   const [passengerName, setPassengerName] = useState("");
   const [passengerIdCard, setPassengerIdCard] = useState("");
@@ -87,6 +90,7 @@ export default function BookingScreen({ route, navigation }) {
       <TextInput
         style={styles.input}
         placeholder="Full name"
+        placeholderTextColor={theme.muted}
         value={passengerName}
         onChangeText={setPassengerName}
         editable={status === "idle" || status === "error"}
@@ -94,6 +98,7 @@ export default function BookingScreen({ route, navigation }) {
       <TextInput
         style={styles.input}
         placeholder="National ID card number"
+        placeholderTextColor={theme.muted}
         value={passengerIdCard}
         onChangeText={setPassengerIdCard}
         editable={status === "idle" || status === "error"}
@@ -101,6 +106,7 @@ export default function BookingScreen({ route, navigation }) {
       <TextInput
         style={styles.input}
         placeholder="Phone (Mobile Money number)"
+        placeholderTextColor={theme.muted}
         value={passengerPhone}
         onChangeText={setPassengerPhone}
         keyboardType="phone-pad"
@@ -113,7 +119,7 @@ export default function BookingScreen({ route, navigation }) {
         </TouchableOpacity>
       )}
 
-      {status === "reserving" && <ActivityIndicator size="large" color="#0B2E8A" />}
+      {status === "reserving" && <ActivityIndicator size="large" color={theme.navy} />}
 
       {status === "held" && (
         <TouchableOpacity style={styles.button} onPress={handleCheckPayment}>
@@ -121,30 +127,34 @@ export default function BookingScreen({ route, navigation }) {
         </TouchableOpacity>
       )}
 
-      {status === "polling" && <ActivityIndicator size="large" color="#0B2E8A" />}
+      {status === "polling" && <ActivityIndicator size="large" color={theme.navy} />}
     </View>
   );
 }
 
-const styles = StyleSheet.create({
-  container: { flex: 1, padding: 20, backgroundColor: "#fff", justifyContent: "center" },
-  logo: { width: 64, height: 64, alignSelf: "center", marginBottom: 12, borderRadius: 14 },
-  title: { fontSize: 18, fontWeight: "700", marginBottom: 4, textAlign: "center", color: "#0B2E8A" },
-  fare: { fontSize: 16, fontWeight: "600", textAlign: "center", marginBottom: 20, color: "#f5a623" },
-  input: {
-    borderWidth: 1,
-    borderColor: "#e2e6ef",
-    borderRadius: 10,
-    padding: 12,
-    marginBottom: 12,
-    fontSize: 15,
-  },
-  button: {
-    backgroundColor: "#0B2E8A",
-    borderRadius: 12,
-    paddingVertical: 14,
-    alignItems: "center",
-    marginTop: 8,
-  },
-  buttonText: { color: "#fff", fontWeight: "700", fontSize: 15 },
-});
+function createStyles(theme) {
+  return StyleSheet.create({
+    container: { flex: 1, padding: 20, backgroundColor: theme.bg, justifyContent: "center" },
+    logo: { width: 64, height: 64, alignSelf: "center", marginBottom: 12, borderRadius: 14 },
+    title: { fontSize: 18, fontWeight: "700", marginBottom: 4, textAlign: "center", color: theme.navy },
+    fare: { fontSize: 16, fontWeight: "600", textAlign: "center", marginBottom: 20, color: theme.gold },
+    input: {
+      borderWidth: 1,
+      borderColor: theme.border,
+      borderRadius: 10,
+      padding: 12,
+      marginBottom: 12,
+      fontSize: 15,
+      color: theme.text,
+      backgroundColor: theme.card,
+    },
+    button: {
+      backgroundColor: theme.navy,
+      borderRadius: 12,
+      paddingVertical: 14,
+      alignItems: "center",
+      marginTop: 8,
+    },
+    buttonText: { color: "#fff", fontWeight: "700", fontSize: 15 },
+  });
+}
