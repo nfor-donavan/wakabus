@@ -84,6 +84,45 @@ export default function SchedulesTab() {
     }
   }
 
+  async function handleBlockSeats(schedule) {
+    const raw = window.prompt(t("schedulesTab.blockSeatsPrompt"));
+    if (!raw) return;
+
+    const seatNumbers = raw
+      .split(",")
+      .map((s) => parseInt(s.trim(), 10))
+      .filter((n) => Number.isInteger(n) && n > 0);
+
+    if (seatNumbers.length === 0) return;
+
+    try {
+      const result = await api.blockSeats(
+        schedule._id,
+        seatNumbers,
+        "Already sold outside WakaBus (agency onboarding)"
+      );
+      if (result.notAvailable?.length > 0) {
+        window.alert(
+          `Blocked: ${result.blocked.join(", ") || "none"}.\n` +
+            `Already unavailable (check these — may already be booked through WakaBus): ${result.notAvailable.join(", ")}`
+        );
+      }
+      load();
+    } catch (err) {
+      setError(err.message);
+    }
+  }
+
+  async function handleUnblockAll(schedule) {
+    if (!window.confirm(`${t("schedulesTab.unblockAll")}?`)) return;
+    try {
+      await api.unblockSeats(schedule._id);
+      load();
+    } catch (err) {
+      setError(err.message);
+    }
+  }
+
   return (
     <>
       <div className="card">
@@ -138,6 +177,7 @@ export default function SchedulesTab() {
               <th>{t("schedulesTab.bus")}</th>
               <th>{t("schedulesTab.departure")}</th>
               <th>{t("schedulesTab.seatsLeft")}</th>
+              <th>{t("schedulesTab.blockedSeats")}</th>
               <th>{t("common.status")}</th>
               <th>{t("schedulesTab.manifest")}</th>
               <th></th>
@@ -152,6 +192,22 @@ export default function SchedulesTab() {
                 <td>{s.busId ? s.busId.registrationNumber : "—"}</td>
                 <td>{new Date(s.departureTime).toLocaleString()}</td>
                 <td>{s.availableSeats.length}</td>
+                <td>
+                  {s.blockedSeats?.length > 0 ? (
+                    <>
+                      <span className="badge Cancelled" title={s.blockedSeats.map((b) => b.seatNumber).join(", ")}>
+                        {s.blockedSeats.length}
+                      </span>{" "}
+                      <button className="secondary" onClick={() => handleUnblockAll(s)}>
+                        {t("schedulesTab.unblockAll")}
+                      </button>
+                    </>
+                  ) : (
+                    <button className="secondary" onClick={() => handleBlockSeats(s)}>
+                      {t("schedulesTab.blockSeatsButton")}
+                    </button>
+                  )}
+                </td>
                 <td>
                   <select value={s.status} onChange={(e) => handleStatusChange(s._id, e.target.value)}>
                     {["Scheduled", "Boarding", "Departed", "Cancelled"].map((opt) => (
@@ -175,7 +231,7 @@ export default function SchedulesTab() {
             ))}
             {schedules.length === 0 && (
               <tr>
-                <td colSpan={7} className="muted">
+                <td colSpan={8} className="muted">
                   {t("schedulesTab.none")}
                 </td>
               </tr>

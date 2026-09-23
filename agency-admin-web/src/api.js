@@ -38,6 +38,16 @@ export const api = {
   updateScheduleStatus: (scheduleId, status) =>
     request(`/agency/schedules/${scheduleId}/status`, { method: "PATCH", body: { status } }),
   deleteSchedule: (scheduleId) => request(`/agency/schedules/${scheduleId}`, { method: "DELETE" }),
+  blockSeats: (scheduleId, seatNumbers, reason) =>
+    request(`/agency/schedules/${scheduleId}/block-seats`, {
+      method: "POST",
+      body: { seatNumbers, reason },
+    }),
+  unblockSeats: (scheduleId, seatNumbers) =>
+    request(`/agency/schedules/${scheduleId}/unblock-seats`, {
+      method: "POST",
+      body: { seatNumbers },
+    }),
 
   cancelBooking: (bookingId, refundReference) =>
     request(`/agency/bookings/${bookingId}/cancel`, {

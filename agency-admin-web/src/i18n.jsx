@@ -52,6 +52,10 @@ const translations = {
     "schedulesTab.none": "No schedules yet.",
     "schedulesTab.deleteConfirm": "Delete {route} on {date}? This can't be undone.",
     "schedulesTab.deleteButton": "Delete",
+    "schedulesTab.blockedSeats": "Blocked",
+    "schedulesTab.blockSeatsButton": "Block seats",
+    "schedulesTab.blockSeatsPrompt": "Seat numbers already sold elsewhere, comma-separated (e.g. 3, 7, 12):",
+    "schedulesTab.unblockAll": "Unblock all",
 
     "routesTab.addTitle": "Add a route",
     "routesTab.departurePlaceholder": "Departure city (e.g. Yaoundé)",
@@ -164,6 +168,10 @@ const translations = {
     "schedulesTab.none": "Aucun horaire pour le moment.",
     "schedulesTab.deleteConfirm": "Supprimer {route} le {date} ? Action irréversible.",
     "schedulesTab.deleteButton": "Supprimer",
+    "schedulesTab.blockedSeats": "Bloqués",
+    "schedulesTab.blockSeatsButton": "Bloquer des sièges",
+    "schedulesTab.blockSeatsPrompt": "Numéros de sièges déjà vendus ailleurs, séparés par des virgules (ex. 3, 7, 12) :",
+    "schedulesTab.unblockAll": "Tout débloquer",
 
     "routesTab.addTitle": "Ajouter un itinéraire",
     "routesTab.departurePlaceholder": "Ville de départ (ex. Yaoundé)",

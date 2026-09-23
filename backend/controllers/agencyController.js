@@ -107,6 +107,84 @@ exports.deleteSchedule = async (req, res) => {
   res.json({ message: "Schedule deleted" });
 };
 
+// POST /api/agency/schedules/:scheduleId/block-seats
+// The tool for the Moghamo problem: an agency going live on WakaBus mid-way
+// through selling a trip on another system (paper, a different app, etc.)
+// needs to tell WakaBus "these seats are already gone" without having a
+// digitized passenger record for each one. This removes them from sale the
+// same way a real booking would — the passenger app and counter both just
+// see them as taken — while keeping a lightweight audit trail of why.
+// Any seat number that's already unavailable (already booked *through*
+// WakaBus, not just blocked) is reported back separately, since that case
+// is a genuine conflict worth the agency's attention, not routine cleanup.
+exports.blockSeats = async (req, res) => {
+  const { scheduleId } = req.params;
+  const { seatNumbers, reason } = req.body;
+
+  if (!Array.isArray(seatNumbers) || seatNumbers.length === 0) {
+    return res.status(400).json({ message: "seatNumbers must be a non-empty array" });
+  }
+  const numbers = [...new Set(seatNumbers.map(Number).filter((n) => Number.isInteger(n) && n > 0))];
+
+  const schedule = await Schedule.findOne({ _id: scheduleId, tenantId: req.user.tenantId });
+  if (!schedule) return res.status(404).json({ message: "Schedule not found" });
+
+  const stillAvailable = numbers.filter((n) => schedule.availableSeats.includes(n));
+  const notAvailable = numbers.filter((n) => !schedule.availableSeats.includes(n));
+
+  if (stillAvailable.length > 0) {
+    await Schedule.findOneAndUpdate(
+      { _id: scheduleId, tenantId: req.user.tenantId },
+      {
+        $pull: { availableSeats: { $in: stillAvailable } },
+        $push: {
+          blockedSeats: {
+            $each: stillAvailable.map((seatNumber) => ({
+              seatNumber,
+              reason: reason || "Already sold outside WakaBus",
+            })),
+          },
+        },
+      }
+    );
+  }
+
+  res.json({
+    blocked: stillAvailable,
+    // Already unavailable for some other reason — either already blocked,
+    // or already booked through WakaBus itself. Surfaced so the agency can
+    // check which case it is rather than assuming it worked silently.
+    notAvailable,
+  });
+};
+
+// POST /api/agency/schedules/:scheduleId/unblock-seats
+// Body: { seatNumbers: [12, 15] } — omit seatNumbers to unblock everything
+// blocked on this schedule (e.g. once the agency confirms their migration
+// list was wrong, or a "sold elsewhere" seat turned out to be free).
+exports.unblockSeats = async (req, res) => {
+  const { scheduleId } = req.params;
+  const { seatNumbers } = req.body;
+
+  const schedule = await Schedule.findOne({ _id: scheduleId, tenantId: req.user.tenantId });
+  if (!schedule) return res.status(404).json({ message: "Schedule not found" });
+
+  const toUnblock =
+    Array.isArray(seatNumbers) && seatNumbers.length > 0
+      ? [...new Set(seatNumbers.map(Number))]
+      : schedule.blockedSeats.map((b) => b.seatNumber);
+
+  await Schedule.findOneAndUpdate(
+    { _id: scheduleId, tenantId: req.user.tenantId },
+    {
+      $pull: { blockedSeats: { seatNumber: { $in: toUnblock } } },
+      $addToSet: { availableSeats: { $each: toUnblock } },
+    }
+  );
+
+  res.json({ unblocked: toUnblock });
+};
+
 // Counter-agent cancellation with a refund reference recorded for reconciliation.
 // GET /api/agency/schedules/:scheduleId/bookings
 exports.listBookingsForSchedule = async (req, res) => {
