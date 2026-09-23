@@ -36,6 +36,22 @@ const BookingSchema = new mongoose.Schema(
     cancelledAt: Date,
     cancelledBy: { type: mongoose.Schema.Types.ObjectId, ref: "Agent" },
     refundReference: String,
+
+    // Luggage checked in against this ticket. Each piece gets its own short
+    // tag code — the same code goes on a physical tag attached to the bag
+    // and on the stub handed to the passenger, so either side can be
+    // scanned/typed in to reclaim it at the destination.
+    luggage: [
+      {
+        tagCode: { type: String, required: true },
+        description: { type: String, required: true }, // e.g. "1 blue suitcase"
+        weightKg: Number,
+        fee: Number, // XAF, optional — some agencies charge per bag
+        status: { type: String, enum: ["Checked", "Claimed"], default: "Checked" },
+        checkedInAt: { type: Date, default: Date.now },
+        claimedAt: Date,
+      },
+    ],
   },
   { timestamps: true }
 );

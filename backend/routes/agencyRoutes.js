@@ -22,6 +22,8 @@ router.post("/schedules/:scheduleId/unblock-seats", asyncHandler(ctrl.unblockSea
 
 router.post("/bookings/:bookingId/cancel", asyncHandler(ctrl.cancelBooking));
 router.get("/schedules/:scheduleId/bookings", asyncHandler(ctrl.listBookingsForSchedule));
+router.post("/bookings/:bookingId/luggage", asyncHandler(ctrl.addLuggage));
+router.patch("/luggage/:tagCode/claim", asyncHandler(ctrl.claimLuggage));
 
 router.get("/schedules/:scheduleId/manifest", asyncHandler(ctrl.getManifest));
 router.get("/schedules/:scheduleId/manifest-json", asyncHandler(ctrl.getManifestJson));

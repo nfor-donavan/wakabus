@@ -93,6 +93,16 @@ const translations = {
     "bookingsTab.none": "No bookings for this schedule yet.",
     "bookingsTab.refundPrompt":
       "If this booking was already Paid, enter a refund reference (leave blank if unpaid):",
+    "bookingsTab.luggage": "Luggage",
+    "bookingsTab.addLuggage": "Add luggage",
+    "bookingsTab.luggageDescPrompt": "Describe the item (e.g. 1 blue suitcase):",
+    "bookingsTab.luggageFeePrompt": "Fee for this item in XAF (leave blank for none):",
+    "bookingsTab.luggageTagIssued": "Tag issued: {tag}\nWrite this on the physical tag and give the passenger their stub.",
+    "bookingsTab.claimTitle": "Claim luggage",
+    "bookingsTab.claimSubtitle": "Enter the tag code from a bag or a passenger's stub to mark it collected.",
+    "bookingsTab.tagCodePlaceholder": "Tag code (e.g. LG-A1B2C3)",
+    "bookingsTab.claimButton": "Mark claimed",
+    "bookingsTab.claimSuccess": "Claimed: {desc} — {passenger}, seat {seat}",
 
     "rentalsTab.title": "Bus rental requests",
     "rentalsTab.subtitle": "For school excursions, events, and other whole-bus hires.",
@@ -209,6 +219,16 @@ const translations = {
     "bookingsTab.none": "Aucune réservation pour cet horaire.",
     "bookingsTab.refundPrompt":
       "Si cette réservation était déjà payée, indiquez une référence de remboursement (laissez vide sinon) :",
+    "bookingsTab.luggage": "Bagages",
+    "bookingsTab.addLuggage": "Ajouter un bagage",
+    "bookingsTab.luggageDescPrompt": "Décrivez l'article (ex. 1 valise bleue) :",
+    "bookingsTab.luggageFeePrompt": "Frais pour cet article en XAF (laissez vide si aucun) :",
+    "bookingsTab.luggageTagIssued": "Étiquette émise : {tag}\nInscrivez ce code sur l'étiquette physique et remettez le talon au passager.",
+    "bookingsTab.claimTitle": "Réclamer un bagage",
+    "bookingsTab.claimSubtitle": "Entrez le code de l'étiquette d'un bagage ou du talon d'un passager pour le marquer récupéré.",
+    "bookingsTab.tagCodePlaceholder": "Code de l'étiquette (ex. LG-A1B2C3)",
+    "bookingsTab.claimButton": "Marquer récupéré",
+    "bookingsTab.claimSuccess": "Récupéré : {desc} — {passenger}, siège {seat}",
 
     "rentalsTab.title": "Demandes de location de bus",
     "rentalsTab.subtitle": "Pour les excursions scolaires, événements et autres locations de bus complet.",

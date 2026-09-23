@@ -22,23 +22,26 @@ export function parseSeatSides(seatingLayout, busClass) {
 }
 
 /**
- * Splits seat numbers 1..totalSeats into front-to-back rows, filling the
- * left pack first then the right pack in each row (matches how the backend
- * assigns seat numbers sequentially when a schedule is created).
+ * Splits seat numbers into front-to-back rows, filling the left pack first
+ * then the right pack in each row (matches how the backend assigns seat
+ * numbers when a schedule is created). Numbering starts at 2 — seat 1 is
+ * reserved for the driver and is never offered for sale — so totalSeats
+ * passenger seats are numbered 2..totalSeats+1.
  * Returns { rows: [{ left: [seatNumbers], right: [seatNumbers] }], left, right }.
  * rows[0] is the front row — the one beside the driver's cab.
  */
 export function buildSeatRows(totalSeats, seatingLayout, busClass) {
   const { left, right } = parseSeatSides(seatingLayout, busClass);
   const rows = [];
-  let seatNumber = 1;
+  let seatNumber = 2; // seat 1 = driver, never sold
+  const lastSeatNumber = totalSeats + 1;
 
-  while (seatNumber <= totalSeats) {
+  while (seatNumber <= lastSeatNumber) {
     const leftSeats = [];
-    for (let i = 0; i < left && seatNumber <= totalSeats; i++) leftSeats.push(seatNumber++);
+    for (let i = 0; i < left && seatNumber <= lastSeatNumber; i++) leftSeats.push(seatNumber++);
 
     const rightSeats = [];
-    for (let i = 0; i < right && seatNumber <= totalSeats; i++) rightSeats.push(seatNumber++);
+    for (let i = 0; i < right && seatNumber <= lastSeatNumber; i++) rightSeats.push(seatNumber++);
 
     if (leftSeats.length === 0 && rightSeats.length === 0) break; // safety net
     rows.push({ left: leftSeats, right: rightSeats });

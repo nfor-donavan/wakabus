@@ -55,6 +55,9 @@ export const api = {
       body: { refundReference },
     }),
   listBookingsForSchedule: (scheduleId) => request(`/agency/schedules/${scheduleId}/bookings`),
+  addLuggage: (bookingId, payload) =>
+    request(`/agency/bookings/${bookingId}/luggage`, { method: "POST", body: payload }),
+  claimLuggage: (tagCode) => request(`/agency/luggage/${tagCode}/claim`, { method: "PATCH" }),
 
   downloadManifestPdf: (scheduleId) =>
     request(`/agency/schedules/${scheduleId}/manifest`, { isBlob: true }),

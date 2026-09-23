@@ -1,3 +1,4 @@
+const crypto = require("crypto");
 const Bus = require("../models/Bus");
 const Route = require("../models/Route");
 const Schedule = require("../models/Schedule");
@@ -46,7 +47,10 @@ exports.createSchedule = async (req, res) => {
   const bus = await Bus.findOne({ _id: busId, tenantId: req.user.tenantId });
   if (!bus) return res.status(404).json({ message: "Bus not found for this tenant" });
 
-  const seatNumbers = Array.from({ length: bus.totalSeats }, (_, i) => i + 1);
+  // Seat numbering starts at 2 — seat 1 is reserved for the driver and is
+  // never offered for sale, matching how passengers actually read seat
+  // numbers on the bus itself.
+  const seatNumbers = Array.from({ length: bus.totalSeats }, (_, i) => i + 2);
 
   const schedule = await Schedule.create({
     tenantId: req.user.tenantId,
@@ -220,6 +224,60 @@ exports.cancelBooking = async (req, res) => {
   );
 
   res.json({ message: "Booking cancelled", booking });
+};
+
+// POST /api/agency/bookings/:bookingId/luggage
+// Body: { description, weightKg, fee }. Generates the tag code — staff write
+// it (or, once a label printer is wired in, print it) on a physical tag
+// attached to the bag, and note it on the passenger's stub.
+exports.addLuggage = async (req, res) => {
+  const { bookingId } = req.params;
+  const { description, weightKg, fee } = req.body;
+
+  if (!description) {
+    return res.status(400).json({ message: "description is required" });
+  }
+
+  const booking = await Booking.findOne({ _id: bookingId, tenantId: req.user.tenantId });
+  if (!booking) return res.status(404).json({ message: "Booking not found" });
+
+  const tagCode = `LG-${crypto.randomBytes(3).toString("hex").toUpperCase()}`;
+  const item = { tagCode, description, weightKg, fee, status: "Checked" };
+  booking.luggage.push(item);
+  await booking.save();
+
+  res.status(201).json({ tagCode, item, booking });
+};
+
+// PATCH /api/agency/luggage/:tagCode/claim
+// Looked up by tag code alone — the counter/gate agent at the destination
+// doesn't need to know which schedule or passenger it belongs to, just the
+// code off the tag or the passenger's stub.
+exports.claimLuggage = async (req, res) => {
+  const { tagCode } = req.params;
+
+  const booking = await Booking.findOne({
+    tenantId: req.user.tenantId,
+    "luggage.tagCode": tagCode,
+  });
+  if (!booking) return res.status(404).json({ message: "No luggage found with that tag code" });
+
+  const item = booking.luggage.find((l) => l.tagCode === tagCode);
+  if (item.status === "Claimed") {
+    return res.status(400).json({ message: "This luggage was already claimed", claimedAt: item.claimedAt });
+  }
+
+  item.status = "Claimed";
+  item.claimedAt = new Date();
+  await booking.save();
+
+  res.json({
+    message: "Luggage marked as claimed",
+    tagCode,
+    description: item.description,
+    passengerName: booking.passengerName,
+    seatNumber: booking.seatNumber,
+  });
 };
 
 // GET /api/tenants/:tenantId/schedules/:scheduleId/manifest

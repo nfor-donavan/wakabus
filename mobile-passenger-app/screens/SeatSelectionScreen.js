@@ -103,7 +103,7 @@ export default function SeatSelectionScreen({ route, navigation }) {
         <View style={styles.cab}>
           <View style={styles.cabSide}>
             <SteeringWheelIcon color={theme.navy} />
-            <Text style={styles.cabLabel}>Driver</Text>
+            <Text style={styles.cabLabel}>1 · Driver</Text>
           </View>
           <View style={styles.cabSide}>
             <DoorIcon color={theme.muted} />
