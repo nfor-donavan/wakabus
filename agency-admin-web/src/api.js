@@ -69,6 +69,17 @@ export const api = {
     request(`/agency/rentals/${rentalId}`, { method: "PATCH", body: payload }),
   deleteRental: (rentalId) => request(`/agency/rentals/${rentalId}`, { method: "DELETE" }),
 
+  listPackages: () => request("/agency/packages"),
+  createPackage: (payload) => request("/agency/packages", { method: "POST", body: payload }),
+  getPackageByTrackingCode: (trackingCode) => request(`/agency/packages/${trackingCode}`),
+  updatePackageStatus: (packageId, status) =>
+    request(`/agency/packages/${packageId}/status`, { method: "PUT", body: { status } }),
+  verifyPackagePickup: (trackingCode, otp) =>
+    request("/agency/packages/verify-pickup", { method: "POST", body: { trackingCode, otp } }),
+  unlockPackagePickup: (packageId) =>
+    request(`/agency/packages/${packageId}/unlock`, { method: "PATCH" }),
+  listPackagesForSchedule: (scheduleId) => request(`/agency/schedules/${scheduleId}/packages`),
+
   getToken,
 };
 

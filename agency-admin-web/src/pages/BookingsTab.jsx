@@ -7,6 +7,7 @@ export default function BookingsTab() {
   const [schedules, setSchedules] = useState([]);
   const [selectedScheduleId, setSelectedScheduleId] = useState("");
   const [bookings, setBookings] = useState([]);
+  const [packages, setPackages] = useState([]);
   const [error, setError] = useState("");
   const [claimTag, setClaimTag] = useState("");
   const [claimResult, setClaimResult] = useState("");
@@ -19,10 +20,16 @@ export default function BookingsTab() {
     setSelectedScheduleId(scheduleId);
     if (!scheduleId) {
       setBookings([]);
+      setPackages([]);
       return;
     }
     try {
-      setBookings(await api.listBookingsForSchedule(scheduleId));
+      const [bookingsForSchedule, packagesForSchedule] = await Promise.all([
+        api.listBookingsForSchedule(scheduleId),
+        api.listPackagesForSchedule(scheduleId),
+      ]);
+      setBookings(bookingsForSchedule);
+      setPackages(packagesForSchedule);
     } catch (err) {
       setError(err.message);
     }
@@ -110,73 +117,115 @@ export default function BookingsTab() {
           </select>
         </div>
         {error && <p className="error-text">{error}</p>}
-
-        {selectedScheduleId && (
-          <table>
-            <thead>
-              <tr>
-                <th>{t("bookingsTab.seat")}</th>
-                <th>{t("bookingsTab.passenger")}</th>
-                <th>{t("bookingsTab.phone")}</th>
-                <th>{t("bookingsTab.ticketCode")}</th>
-                <th>{t("bookingsTab.fare")}</th>
-                <th>{t("bookingsTab.source")}</th>
-                <th>{t("common.status")}</th>
-                <th>{t("bookingsTab.luggage")}</th>
-                <th></th>
-              </tr>
-            </thead>
-            <tbody>
-              {bookings.map((b) => (
-                <tr key={b._id}>
-                  <td>{b.seatNumber}</td>
-                  <td>{b.passengerName}</td>
-                  <td>{b.passengerPhone}</td>
-                  <td>{b.ticketCode}</td>
-                  <td>{b.farePaid?.toLocaleString()} XAF</td>
-                  <td>{b.bookingSource}</td>
-                  <td>
-                    <span className={`badge ${b.paymentStatus}`}>{b.paymentStatus}</span>
-                  </td>
-                  <td>
-                    {b.luggage?.length > 0 && (
-                      <div style={{ marginBottom: 6 }}>
-                        {b.luggage.map((l) => (
-                          <div key={l.tagCode} style={{ fontSize: 12, marginBottom: 2 }}>
-                            <span className={`badge ${l.status === "Claimed" ? "Cancelled" : "Pending"}`}>
-                              {l.tagCode}
-                            </span>{" "}
-                            {l.description}
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                    {!["Cancelled", "Refunded"].includes(b.paymentStatus) && (
-                      <button className="secondary" onClick={() => handleAddLuggage(b)}>
-                        {t("bookingsTab.addLuggage")}
-                      </button>
-                    )}
-                  </td>
-                  <td>
-                    {!["Cancelled", "Refunded"].includes(b.paymentStatus) && (
-                      <button className="danger" onClick={() => handleCancel(b._id)}>
-                        {t("common.cancel")}
-                      </button>
-                    )}
-                  </td>
-                </tr>
-              ))}
-              {bookings.length === 0 && (
-                <tr>
-                  <td colSpan={9} className="muted">
-                    {t("bookingsTab.none")}
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
-        )}
       </div>
+
+      {selectedScheduleId && (
+        <div className="split-row">
+          <div className="card" style={{ flex: 1, minWidth: 320 }}>
+            <h2>{t("bookingsTab.title")}</h2>
+            <table>
+              <thead>
+                <tr>
+                  <th>{t("bookingsTab.seat")}</th>
+                  <th>{t("bookingsTab.passenger")}</th>
+                  <th>{t("bookingsTab.phone")}</th>
+                  <th>{t("bookingsTab.ticketCode")}</th>
+                  <th>{t("bookingsTab.fare")}</th>
+                  <th>{t("bookingsTab.source")}</th>
+                  <th>{t("common.status")}</th>
+                  <th>{t("bookingsTab.luggage")}</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody>
+                {bookings.map((b) => (
+                  <tr key={b._id}>
+                    <td>{b.seatNumber}</td>
+                    <td>{b.passengerName}</td>
+                    <td>{b.passengerPhone}</td>
+                    <td>{b.ticketCode}</td>
+                    <td>{b.farePaid?.toLocaleString()} XAF</td>
+                    <td>{b.bookingSource}</td>
+                    <td>
+                      <span className={`badge ${b.paymentStatus}`}>{b.paymentStatus}</span>
+                    </td>
+                    <td>
+                      {b.luggage?.length > 0 && (
+                        <div style={{ marginBottom: 6 }}>
+                          {b.luggage.map((l) => (
+                            <div key={l.tagCode} style={{ fontSize: 12, marginBottom: 2 }}>
+                              <span className={`badge ${l.status === "Claimed" ? "Cancelled" : "Pending"}`}>
+                                {l.tagCode}
+                              </span>{" "}
+                              {l.description}
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                      {!["Cancelled", "Refunded"].includes(b.paymentStatus) && (
+                        <button className="secondary" onClick={() => handleAddLuggage(b)}>
+                          {t("bookingsTab.addLuggage")}
+                        </button>
+                      )}
+                    </td>
+                    <td>
+                      {!["Cancelled", "Refunded"].includes(b.paymentStatus) && (
+                        <button className="danger" onClick={() => handleCancel(b._id)}>
+                          {t("common.cancel")}
+                        </button>
+                      )}
+                    </td>
+                  </tr>
+                ))}
+                {bookings.length === 0 && (
+                  <tr>
+                    <td colSpan={9} className="muted">
+                      {t("bookingsTab.none")}
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+
+          <div className="card" style={{ flex: 1, minWidth: 320 }}>
+            <h2>{t("bookingsTab.packagesOnThisTrip")}</h2>
+            <table>
+              <thead>
+                <tr>
+                  <th>{t("packagesTab.trackingCode")}</th>
+                  <th>{t("packagesTab.recipient")}</th>
+                  <th>{t("common.status")}</th>
+                </tr>
+              </thead>
+              <tbody>
+                {packages.map((p) => (
+                  <tr key={p._id}>
+                    <td>{p.trackingCode}</td>
+                    <td>
+                      {p.recipient.name}
+                      <br />
+                      <span className="muted">{p.recipient.phone}</span>
+                    </td>
+                    <td>
+                      <span className={`badge ${p.status === "Collected" ? "Paid" : "Pending"}`}>
+                        {t(`packagesTab.status${p.status}`)}
+                      </span>
+                    </td>
+                  </tr>
+                ))}
+                {packages.length === 0 && (
+                  <tr>
+                    <td colSpan={3} className="muted">
+                      {t("packagesTab.none")}
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
     </>
   );
 }

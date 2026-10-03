@@ -102,6 +102,10 @@ export default function SearchScreen({ navigation }) {
       <TouchableOpacity onPress={() => navigation.navigate("MyTickets")}>
         <Text style={styles.myTicketsLink}>My tickets (offline)</Text>
       </TouchableOpacity>
+
+      <TouchableOpacity onPress={() => navigation.navigate("StaffLogin")}>
+        <Text style={styles.staffLink}>Staff login</Text>
+      </TouchableOpacity>
     </KeyboardAvoidingView>
   );
 }
@@ -137,6 +141,15 @@ function createStyles(theme) {
       marginTop: 18,
       fontWeight: "600",
       fontSize: 13,
+    },
+    // Deliberately understated — this is for counter/admin staff, not a
+    // passenger-facing feature, so it shouldn't compete for attention.
+    staffLink: {
+      textAlign: "center",
+      color: theme.muted,
+      marginTop: 14,
+      fontWeight: "500",
+      fontSize: 11,
     },
   });
 }

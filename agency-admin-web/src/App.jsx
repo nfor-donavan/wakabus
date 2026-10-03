@@ -5,12 +5,14 @@ import RoutesTab from "./pages/RoutesTab.jsx";
 import SchedulesTab from "./pages/SchedulesTab.jsx";
 import BookingsTab from "./pages/BookingsTab.jsx";
 import RentalsTab from "./pages/RentalsTab.jsx";
+import PackagesTab from "./pages/PackagesTab.jsx";
 import { useLanguage } from "./i18n.jsx";
 
 function useTabs(t) {
   return [
     { id: "schedules", label: t("nav.schedules"), component: SchedulesTab },
     { id: "bookings", label: t("nav.bookings"), component: BookingsTab },
+    { id: "packages", label: t("nav.packages"), component: PackagesTab },
     { id: "rentals", label: t("nav.rentals"), component: RentalsTab },
     { id: "buses", label: t("nav.fleet"), component: BusesTab },
     { id: "routes", label: t("nav.routes"), component: RoutesTab },

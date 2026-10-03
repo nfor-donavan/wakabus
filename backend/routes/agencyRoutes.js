@@ -4,6 +4,7 @@ const { requireAuth, requireRole } = require("../middleware/auth");
 const asyncHandler = require("../middleware/asyncHandler");
 const ctrl = require("../controllers/agencyController");
 const rentalCtrl = require("../controllers/rentalController");
+const packageCtrl = require("../controllers/packageController");
 
 router.use(requireAuth, requireRole("agency_admin", "counter_agent"));
 
@@ -32,5 +33,18 @@ router.post("/rentals", asyncHandler(rentalCtrl.createRental));
 router.get("/rentals", asyncHandler(rentalCtrl.listRentals));
 router.patch("/rentals/:rentalId", asyncHandler(rentalCtrl.updateRental));
 router.delete("/rentals/:rentalId", requireRole("agency_admin"), asyncHandler(rentalCtrl.deleteRental));
+
+// Packages / waybill (courier) — same terminals, same buses, separate cargo.
+router.post("/packages", asyncHandler(packageCtrl.createPackage));
+router.get("/packages", asyncHandler(packageCtrl.listPackages));
+router.get("/packages/:trackingCode", asyncHandler(packageCtrl.getPackageByTrackingCode));
+router.put("/packages/:packageId/status", asyncHandler(packageCtrl.updatePackageStatus));
+router.post("/packages/verify-pickup", asyncHandler(packageCtrl.verifyPickup));
+router.patch(
+  "/packages/:packageId/unlock",
+  requireRole("agency_admin"),
+  asyncHandler(packageCtrl.unlockPickup)
+);
+router.get("/schedules/:scheduleId/packages", asyncHandler(packageCtrl.listPackagesForSchedule));
 
 module.exports = router;

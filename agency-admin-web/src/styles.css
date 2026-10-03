@@ -110,6 +110,8 @@ body {
 }
 .card h2 { font-size: 16px; margin: 0 0 14px; }
 
+.split-row { display: flex; gap: 20px; flex-wrap: wrap; }
+
 .form-row { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 12px; }
 input, select {
   padding: 9px 12px;

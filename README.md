@@ -117,6 +117,43 @@ wakabus/
    **Read the security note in `qrVerifyOffline.js`** — don't ship your real
    signing secret inside the mobile app bundle in production.
 
+## Packages / waybill (courier service)
+
+Many agencies run passenger seats and package courier (colis) through the
+same terminals and buses — this is a parallel system riding alongside
+bookings, not bolted onto them:
+
+- **Register** a package in the Agency Admin's **Packages** tab: sender,
+  recipient, description, fee, and which schedule it's travelling on. This
+  generates a tracking code (e.g. `FX-COL-4821`) and a 4-digit pickup code,
+  the latter never shown to staff — it's only ever revealed to the recipient
+  by SMS once the package arrives.
+- **Status moves in one direction**, one step at a time: `Received_At_Origin`
+  → `Loaded_On_Bus` → `Arrived_At_Destination` → `Collected`. The first three
+  are plain status updates (each one fires a mock SMS to the recipient — see
+  `backend/utils/mockSms.js`, a placeholder until a real gateway is wired
+  in). `Collected` is different: it's **only** reachable through
+  `POST /verify-pickup`, which checks the pickup code against what's stored
+  (encrypted) — that's what stops someone collecting a parcel that isn't
+  theirs. Five wrong attempts locks the package; an agency admin unlocks it
+  from the Packages tab.
+- The **Bookings** tab now shows a split view for any selected schedule —
+  passengers on the left, packages on that same trip on the right — so a
+  terminal agent sees the whole manifest for a bus run in one place.
+- The **mobile app** has a staff-only mode, reached through a small "Staff
+  login" link at the bottom of the passenger search screen (deliberately
+  understated — passengers aren't meant to notice it). Counter agents and
+  agency admins log in with the same credentials as the web dashboard, then
+  get a camera scanner: point it at a package's tracking code, and it shows
+  the package's details with one button to advance its status, or (once
+  arrived) a field to type the pickup code and hand it over — all from the
+  terminal floor, no laptop needed.
+
+This needs `expo-camera`, which wasn't in the project before — after pulling
+this update, run `npx expo install expo-camera` inside `mobile-passenger-app`
+rather than trusting the version already written into `package.json`, so Expo
+can correct it to match your exact installed SDK version.
+
 ## First things to do
 
 - Wire `paymentController.js` to your actual gateway (Campay/Smobilpay) —

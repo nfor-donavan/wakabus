@@ -11,6 +11,8 @@ import SeatSelectionScreen from "./screens/SeatSelectionScreen";
 import BookingScreen from "./screens/BookingScreen";
 import TicketScreen from "./screens/TicketScreen";
 import MyTicketsScreen from "./screens/MyTicketsScreen";
+import StaffLoginScreen from "./screens/StaffLoginScreen";
+import StaffScannerScreen from "./screens/StaffScannerScreen";
 
 const Stack = createNativeStackNavigator();
 
@@ -79,6 +81,12 @@ function Navigation() {
           options={{ title: "Your ticket", headerBackVisible: false }}
         />
         <Stack.Screen name="MyTickets" component={MyTicketsScreen} options={{ title: "My tickets" }} />
+        <Stack.Screen name="StaffLogin" component={StaffLoginScreen} options={{ title: "Staff login" }} />
+        <Stack.Screen
+          name="StaffScanner"
+          component={StaffScannerScreen}
+          options={{ title: "Package scanner", headerBackVisible: false }}
+        />
       </Stack.Navigator>
     </NavigationContainer>
   );
