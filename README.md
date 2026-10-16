@@ -154,6 +154,55 @@ this update, run `npx expo install expo-camera` inside `mobile-passenger-app`
 rather than trusting the version already written into `package.json`, so Expo
 can correct it to match your exact installed SDK version.
 
+## Counter ticket sales
+
+The Agency Admin's **Counter sales** tab is how agents sell to walk-in customers:
+
+- Pick a trip, tap a seat on the bus-shaped seat map (driver cab, door, 3+2 packs, blocked
+  seats hatched), enter the passenger's name, ID card number and phone, choose **Cash** or
+  **Mobile Money** (the agent confirms the payment and can note the transaction reference),
+  and press **Sell ticket**.
+- The sale uses the same atomic seat claim as the passenger app, so a counter sale and an app
+  booking can never take the same seat. The booking is created already **Paid**, with source
+  `Counter`, and the seat disappears from the app instantly.
+- **Print ticket** opens a one-page PDF (A6) with the trip, seat, fare and a signed QR code.
+  The QR is the same signed payload as an app ticket, so it validates the same way. The
+  passenger's ID number is never printed on the ticket.
+- Endpoints: `POST /api/agency/counter-sales`, `GET /api/agency/bookings/:id/ticket-pdf`.
+  This adds one backend dependency, `qrcode` (Render installs it on the next deploy).
+
+## Manifest PDF
+
+The checkpoint manifest is now a proper bilingual (English/French) A4 document: company header
+and manifest reference, a trip summary (route, departure, bus, passengers / capacity, parcels),
+a numbered passenger table (seat, name, phone, ID card, ticket, bags), a **parcels** section for
+anything loaded on that trip (the pickup code is never included), signature boxes for agent,
+driver and checkpoint, and a footer with page numbers and a confidentiality notice on every page.
+
+## Branding (Nexus Tech Labs)
+
+- Brand constants and asset paths are centralised: `src/branding.js` in each dashboard and
+  `utils/branding.js` in the app. Assets were generated from the supplied logo
+  (`public/nexus-logo.png`, `public/nexus-emblem.png`, `public/favicon.png`; the app has
+  `assets/nexus-logo.png`, `nexus-emblem.png`, `nexus-splash.png`; the backend uses
+  `assets/nexus-emblem.png` in PDFs). Only the faint off-white background was normalised to pure
+  white; the artwork itself is untouched.
+- **Dashboards:** full logo and slogan on the login screen, emblem in the header, a branded
+  start-up loader (once per browser session, plus a reusable `BrandLoader` component), a subtle
+  "Powered by Nexus Tech Labs" footer, a Nexus favicon and page title. The logo always sits on a
+  white tile so it stays legible in dark mode.
+- **App:** the native splash uses the Nexus emblem on white (`app.json`), followed by an in-app
+  `BrandPreloader` (fade-in, gentle pulse, spinner) while the saved theme and language load, and a
+  small "Powered by" line on the search screen. The launcher icon is still the WakaBus bus icon,
+  because that is the product passengers look for; swap `icon` in `app.json` if you prefer the emblem.
+- The slogan is kept in English in both languages because it is the official wording.
+
+## Languages
+
+English and French now cover the dashboards **and** the passenger app. The app starts in the
+phone's language, has an EN/FR switch in the header on every screen, and remembers the choice.
+Messages that come from the server (for example "Seat already taken") are still in English.
+
 ## First things to do
 
 - Wire `paymentController.js` to your actual gateway (Campay/Smobilpay) —

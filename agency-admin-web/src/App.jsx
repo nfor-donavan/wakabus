@@ -6,11 +6,16 @@ import SchedulesTab from "./pages/SchedulesTab.jsx";
 import BookingsTab from "./pages/BookingsTab.jsx";
 import RentalsTab from "./pages/RentalsTab.jsx";
 import PackagesTab from "./pages/PackagesTab.jsx";
+import CounterTab from "./pages/CounterTab.jsx";
 import { useLanguage } from "./i18n.jsx";
+import BrandLoader from "./components/BrandLoader.jsx";
+import BrandFooter from "./components/BrandFooter.jsx";
+import { BRAND } from "./branding.js";
 
 function useTabs(t) {
   return [
     { id: "schedules", label: t("nav.schedules"), component: SchedulesTab },
+    { id: "counter", label: t("nav.counter"), component: CounterTab },
     { id: "bookings", label: t("nav.bookings"), component: BookingsTab },
     { id: "packages", label: t("nav.packages"), component: PackagesTab },
     { id: "rentals", label: t("nav.rentals"), component: RentalsTab },
@@ -44,6 +49,19 @@ export default function App() {
   const [activeTab, setActiveTab] = useState("schedules");
   const [theme, setTheme] = useState(() => localStorage.getItem("wakabus_theme") || "light");
 
+  // One short branded start-up screen per browser session (not on every reload
+  // of an already-open tab, and never for ordinary API calls).
+  const [booting, setBooting] = useState(() => !sessionStorage.getItem("wakabus_booted"));
+
+  useEffect(() => {
+    if (!booting) return undefined;
+    const id = setTimeout(() => {
+      sessionStorage.setItem("wakabus_booted", "1");
+      setBooting(false);
+    }, 900);
+    return () => clearTimeout(id);
+  }, [booting]);
+
   useEffect(() => {
     document.documentElement.setAttribute("data-theme", theme);
     localStorage.setItem("wakabus_theme", theme);
@@ -53,6 +71,10 @@ export default function App() {
     localStorage.removeItem("agency_token");
     localStorage.removeItem("agency_user");
     setUser(null);
+  }
+
+  if (booting) {
+    return <BrandLoader text={t("brand.initializing")} />;
   }
 
   if (!user) {
@@ -81,7 +103,10 @@ export default function App() {
       </aside>
       <main className="main">
         <div className="topbar">
-          <h1>{TABS.find((tb) => tb.id === activeTab)?.label}</h1>
+          <div className="topbar-title">
+            <img className="topbar-emblem" src={BRAND.emblem} alt={BRAND.company} />
+            <h1>{TABS.find((tb) => tb.id === activeTab)?.label}</h1>
+          </div>
           <div className="topbar-actions">
             <span className="muted">
               {user.fullName} · {user.role.replace("_", " ")}
@@ -101,7 +126,10 @@ export default function App() {
             </button>
           </div>
         </div>
-        <ActiveComponent />
+        <div className="main-content">
+          <ActiveComponent />
+        </div>
+        <BrandFooter />
       </main>
     </div>
   );

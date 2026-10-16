@@ -69,6 +69,9 @@ export const api = {
     request(`/agency/rentals/${rentalId}`, { method: "PATCH", body: payload }),
   deleteRental: (rentalId) => request(`/agency/rentals/${rentalId}`, { method: "DELETE" }),
 
+  createCounterSale: (payload) => request("/agency/counter-sales", { method: "POST", body: payload }),
+  downloadTicketPdf: (bookingId) => request(`/agency/bookings/${bookingId}/ticket-pdf`, { isBlob: true }),
+
   listPackages: () => request("/agency/packages"),
   createPackage: (payload) => request("/agency/packages", { method: "POST", body: payload }),
   getPackageByTrackingCode: (trackingCode) => request(`/agency/packages/${trackingCode}`),

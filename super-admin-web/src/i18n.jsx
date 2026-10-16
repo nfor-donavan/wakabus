@@ -13,6 +13,8 @@ const translations = {
     "common.lightMode": "Light",
     "common.langToggle": "FR",
     "common.status": "Status",
+    "brand.poweredBy": "Powered by Nexus Tech Labs",
+    "brand.initializing": "Initializing WakaBus…",
 
     "login.title": "Welcome back",
     "login.subtitle": "Sign in to the platform control panel",
@@ -73,6 +75,8 @@ const translations = {
     "common.lightMode": "Clair",
     "common.langToggle": "EN",
     "common.status": "Statut",
+    "brand.poweredBy": "Propulsé par Nexus Tech Labs",
+    "brand.initializing": "Initialisation de WakaBus…",
 
     "login.title": "Content de vous revoir",
     "login.subtitle": "Connectez-vous au panneau de contrôle de la plateforme",

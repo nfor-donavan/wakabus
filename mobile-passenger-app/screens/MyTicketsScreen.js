@@ -4,6 +4,7 @@ import { useFocusEffect } from "@react-navigation/native";
 import QRCode from "react-native-qrcode-svg";
 import { getAllOfflineTickets } from "../services/ticketStorage";
 import { useTheme } from "../context/ThemeContext";
+import { useLanguage } from "../context/LanguageContext";
 
 /**
  * Reads straight from AsyncStorage — works with zero connectivity. This is
@@ -13,6 +14,7 @@ import { useTheme } from "../context/ThemeContext";
 export default function MyTicketsScreen() {
   const { theme } = useTheme();
   const styles = createStyles(theme);
+  const { t, locale } = useLanguage();
   const [tickets, setTickets] = useState([]);
   const [expandedCode, setExpandedCode] = useState(null);
 
@@ -35,10 +37,10 @@ export default function MyTicketsScreen() {
           <Text style={styles.route}>
             {item.departureCity} → {item.destinationCity}
           </Text>
-          <Text style={styles.seat}>Seat {item.seatNumber}</Text>
+          <Text style={styles.seat}>{t("myTickets.seat", { n: item.seatNumber })}</Text>
         </View>
         <Text style={styles.time}>
-          {departure.toLocaleDateString()} · {departure.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+          {departure.toLocaleDateString(locale)} · {departure.toLocaleTimeString(locale, { hour: "2-digit", minute: "2-digit" })}
         </Text>
         <Text style={styles.code}>{item.ticketCode}</Text>
 
@@ -59,8 +61,7 @@ export default function MyTicketsScreen() {
         renderItem={renderItem}
         ListEmptyComponent={
           <Text style={styles.empty}>
-            No saved tickets yet. Once you book and pay for a trip, it appears here — and stays
-            available even offline.
+            {t("myTickets.empty")}
           </Text>
         }
         contentContainerStyle={{ paddingBottom: 24 }}

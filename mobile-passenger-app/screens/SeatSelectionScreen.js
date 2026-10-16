@@ -2,6 +2,7 @@ import React, { useMemo, useState } from "react";
 import { View, Text, TouchableOpacity, StyleSheet, ScrollView } from "react-native";
 import Svg, { Circle, Line, Rect } from "react-native-svg";
 import { useTheme } from "../context/ThemeContext";
+import { useLanguage } from "../context/LanguageContext";
 import { buildSeatRows } from "../utils/seatLayout";
 
 function SteeringWheelIcon({ color }) {
@@ -27,6 +28,7 @@ function DoorIcon({ color }) {
 export default function SeatSelectionScreen({ route, navigation }) {
   const { theme } = useTheme();
   const styles = createStyles(theme);
+  const { t } = useLanguage();
   const {
     tenantId,
     companyName,
@@ -91,9 +93,9 @@ export default function SeatSelectionScreen({ route, navigation }) {
       </Text>
 
       <View style={styles.legendRow}>
-        <LegendDot theme={theme} color={theme.border} label="Taken" />
-        <LegendDot theme={theme} color={theme.card} border={theme.navy} label="Available" />
-        <LegendDot theme={theme} color={theme.navy} label="Selected" />
+        <LegendDot theme={theme} color={theme.border} label={t("seat.taken")} />
+        <LegendDot theme={theme} color={theme.card} border={theme.navy} label={t("seat.available")} />
+        <LegendDot theme={theme} color={theme.navy} label={t("seat.selected")} />
       </View>
 
       <ScrollView contentContainerStyle={styles.busBody}>
@@ -103,18 +105,18 @@ export default function SeatSelectionScreen({ route, navigation }) {
         <View style={styles.cab}>
           <View style={styles.cabSide}>
             <SteeringWheelIcon color={theme.navy} />
-            <Text style={styles.cabLabel}>1 · Driver</Text>
+            <Text style={styles.cabLabel}>{t("seat.driver")}</Text>
           </View>
           <View style={styles.cabSide}>
             <DoorIcon color={theme.muted} />
-            <Text style={styles.cabLabel}>Door</Text>
+            <Text style={styles.cabLabel}>{t("seat.door")}</Text>
           </View>
         </View>
 
         {rows.map((row, rowIndex) => (
           <View key={rowIndex} style={styles.rowWrapper}>
             {rowIndex === 0 && (
-              <Text style={styles.besideDriverLabel}>Beside driver</Text>
+              <Text style={styles.besideDriverLabel}>{t("seat.besideDriver")}</Text>
             )}
             <View style={styles.row}>
               <View style={styles.seatPack}>{row.left.map(renderSeat)}</View>
@@ -131,7 +133,7 @@ export default function SeatSelectionScreen({ route, navigation }) {
         disabled={!selectedSeat}
       >
         <Text style={styles.continueText}>
-          {selectedSeat ? `Continue with seat ${selectedSeat}` : "Select a seat"}
+          {selectedSeat ? t("seat.continueWith", { n: selectedSeat }) : t("seat.select")}
         </Text>
       </TouchableOpacity>
     </View>

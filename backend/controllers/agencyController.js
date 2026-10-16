@@ -3,7 +3,11 @@ const Bus = require("../models/Bus");
 const Route = require("../models/Route");
 const Schedule = require("../models/Schedule");
 const Booking = require("../models/Booking");
+const Package = require("../models/Package");
+const Tenant = require("../models/Tenant");
+const qrTicket = require("../utils/qrTicket");
 const { buildManifestPdf } = require("../utils/manifestPdf");
+const { buildTicketPdf } = require("../utils/ticketPdf");
 
 // Every query below uses req.user.tenantId, taken from the verified JWT —
 // never from req.body/req.params — so an agency can only ever touch its own data.
@@ -305,15 +309,106 @@ exports.getManifest = async (req, res) => {
     passengerIdCard: b.getDecryptedIdCard(),
     ticketCode: b.ticketCode,
     bookingSource: b.bookingSource,
+    luggageCount: b.luggage ? b.luggage.length : 0,
   }));
 
-  const pdfBuffer = await buildManifestPdf({ schedule, passengers });
+  // Parcels riding on this trip appear on the same document. The pickup OTP is
+  // never included — it only ever travels by SMS to the recipient.
+  const [tenant, packages] = await Promise.all([
+    Tenant.findById(req.user.tenantId),
+    Package.find({ tenantId: req.user.tenantId, assignedScheduleId: scheduleId }).sort({ createdAt: 1 }),
+  ]);
+
+  const pdfBuffer = await buildManifestPdf({ schedule, tenant, passengers, packages });
 
   res.setHeader("Content-Type", "application/pdf");
   res.setHeader(
     "Content-Disposition",
     `attachment; filename=manifest-${schedule._id}.pdf`
   );
+  res.send(pdfBuffer);
+};
+
+// POST /api/agency/counter-sales
+// A counter agent sells a seat to a walk-in customer. The customer pays at the
+// desk (cash, or Mobile Money confirmed by the agent), so the booking is created
+// already Paid — there is no hold/expiry step. It uses the same atomic seat claim
+// as app bookings, so the counter and the passenger app can never sell one seat twice.
+exports.createCounterSale = async (req, res) => {
+  const { scheduleId, seatNumber, passengerName, passengerIdCard, passengerPhone, paymentMethod, paymentReference } =
+    req.body;
+  const tenantId = req.user.tenantId;
+  const seat = Number(seatNumber);
+
+  if (!scheduleId || !Number.isInteger(seat) || seat < 1 || !passengerName || !passengerIdCard || !passengerPhone) {
+    return res.status(400).json({ message: "scheduleId, seatNumber, passengerName, passengerIdCard and passengerPhone are required" });
+  }
+  const method = paymentMethod === "Mobile_Money" ? "Mobile_Money" : "Cash";
+
+  const schedule = await Schedule.findOneAndUpdate(
+    { _id: scheduleId, tenantId, status: { $in: ["Scheduled", "Boarding"] }, availableSeats: seat },
+    { $pull: { availableSeats: seat } },
+    { new: true }
+  );
+  if (!schedule) {
+    return res.status(400).json({ message: "Seat already taken, or this trip is no longer on sale" });
+  }
+
+  try {
+    const route = await Route.findOne({ _id: schedule.routeId, tenantId });
+    const farePaid = route ? route.basePrice : 0;
+    const ticketCode = `TCK-${crypto.randomBytes(4).toString("hex").toUpperCase()}`;
+
+    const booking = new Booking({
+      tenantId,
+      scheduleId,
+      seatNumber: seat,
+      passengerName: passengerName.trim(),
+      passengerPhone: passengerPhone.trim(),
+      ticketCode,
+      farePaid,
+      bookingSource: "Counter",
+      paymentStatus: "Paid",
+      paymentReference: method === "Cash" ? "CASH" : paymentReference?.trim() || "MOBILE_MONEY_COUNTER",
+      holdExpiresAt: new Date(), // not used for an already-paid sale; the field is required by the schema
+    });
+    booking.setPassengerIdCard(passengerIdCard.trim());
+    booking.signedQrPayload = qrTicket.sign({
+      ticketCode,
+      scheduleId: String(scheduleId),
+      seatNumber: seat,
+      expiresAt: new Date(schedule.departureTime).getTime() + 6 * 60 * 60 * 1000,
+    });
+    await booking.save();
+
+    res.status(201).json({ bookingId: booking._id, ticketCode, seatNumber: seat, farePaid });
+  } catch (err) {
+    // The booking failed after the seat was claimed — give the seat straight back.
+    await Schedule.findOneAndUpdate({ _id: scheduleId, tenantId }, { $addToSet: { availableSeats: seat } });
+    throw err;
+  }
+};
+
+// GET /api/agency/bookings/:bookingId/ticket-pdf — printable ticket for a Paid booking.
+exports.getTicketPdf = async (req, res) => {
+  const { bookingId } = req.params;
+  const tenantId = req.user.tenantId;
+
+  const booking = await Booking.findOne({ _id: bookingId, tenantId });
+  if (!booking) return res.status(404).json({ message: "Booking not found" });
+  if (booking.paymentStatus !== "Paid" || !booking.signedQrPayload) {
+    return res.status(400).json({ message: "A ticket can only be printed for a paid booking" });
+  }
+
+  const [schedule, tenant] = await Promise.all([
+    Schedule.findOne({ _id: booking.scheduleId, tenantId }).populate("busId routeId"),
+    Tenant.findById(tenantId),
+  ]);
+  if (!schedule) return res.status(404).json({ message: "Schedule not found" });
+
+  const pdfBuffer = await buildTicketPdf({ booking, schedule, tenant });
+  res.setHeader("Content-Type", "application/pdf");
+  res.setHeader("Content-Disposition", `inline; filename=ticket-${booking.ticketCode}.pdf`);
   res.send(pdfBuffer);
 };
 

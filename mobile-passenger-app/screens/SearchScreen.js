@@ -11,11 +11,14 @@ import {
   Platform,
 } from "react-native";
 import { api } from "../services/api";
+import BrandFooter from "../components/BrandFooter";
 import { useTheme } from "../context/ThemeContext";
+import { useLanguage } from "../context/LanguageContext";
 
 export default function SearchScreen({ navigation }) {
   const { theme } = useTheme();
   const styles = createStyles(theme);
+  const { t } = useLanguage();
   const [departureCity, setDepartureCity] = useState("Yaoundé");
   const [destinationCity, setDestinationCity] = useState("Douala");
   const [date, setDate] = useState(""); // optional, format YYYY-MM-DD
@@ -23,13 +26,13 @@ export default function SearchScreen({ navigation }) {
 
   async function handleSearch() {
     if (!departureCity || !destinationCity) {
-      Alert.alert("Missing info", "Enter both a departure and destination city.");
+      Alert.alert(t("common.missingInfo"), t("search.missingCities"));
       return;
     }
     if (date && !/^\d{4}-\d{2}-\d{2}$/.test(date.trim())) {
       Alert.alert(
-        "Check the date",
-        "Enter the date as YYYY-MM-DD (e.g. 2026-09-25), or leave it blank to see every upcoming trip."
+        t("search.checkDate"),
+        t("search.badDate")
       );
       return;
     }
@@ -42,7 +45,7 @@ export default function SearchScreen({ navigation }) {
       );
       navigation.navigate("Results", { schedules, departureCity, destinationCity });
     } catch (err) {
-      Alert.alert("Search failed", err.message);
+      Alert.alert(t("search.failed"), err.message);
     } finally {
       setLoading(false);
     }
@@ -59,53 +62,55 @@ export default function SearchScreen({ navigation }) {
       behavior={Platform.OS === "ios" ? "padding" : undefined}
     >
       <Image source={require("../assets/app-icon.png")} style={styles.logo} />
-      <Text style={styles.title}>Book your inter-city trip</Text>
-      <Text style={styles.subtitle}>Compare every company running your route</Text>
+      <Text style={styles.title}>{t("search.title")}</Text>
+      <Text style={styles.subtitle}>{t("search.subtitle")}</Text>
 
       <View style={styles.card}>
-        <Text style={styles.label}>From</Text>
+        <Text style={styles.label}>{t("search.from")}</Text>
         <TextInput
           style={styles.input}
           value={departureCity}
           onChangeText={setDepartureCity}
-          placeholder="Departure city"
+          placeholder={t("search.fromPlaceholder")}
           placeholderTextColor={theme.muted}
         />
 
         <TouchableOpacity style={styles.swapButton} onPress={swapCities}>
-          <Text style={styles.swapText}>⇅ Swap</Text>
+          <Text style={styles.swapText}>{t("search.swap")}</Text>
         </TouchableOpacity>
 
-        <Text style={styles.label}>To</Text>
+        <Text style={styles.label}>{t("search.to")}</Text>
         <TextInput
           style={styles.input}
           value={destinationCity}
           onChangeText={setDestinationCity}
-          placeholder="Destination city"
+          placeholder={t("search.toPlaceholder")}
           placeholderTextColor={theme.muted}
         />
 
-        <Text style={styles.label}>Date (optional)</Text>
+        <Text style={styles.label}>{t("search.date")}</Text>
         <TextInput
           style={styles.input}
           value={date}
           onChangeText={setDate}
-          placeholder="YYYY-MM-DD"
+          placeholder={t("search.datePlaceholder")}
           placeholderTextColor={theme.muted}
         />
       </View>
 
       <TouchableOpacity style={styles.searchButton} onPress={handleSearch} disabled={loading}>
-        <Text style={styles.searchButtonText}>{loading ? "Searching…" : "Search buses"}</Text>
+        <Text style={styles.searchButtonText}>{loading ? t("search.searching") : t("search.button")}</Text>
       </TouchableOpacity>
 
       <TouchableOpacity onPress={() => navigation.navigate("MyTickets")}>
-        <Text style={styles.myTicketsLink}>My tickets (offline)</Text>
+        <Text style={styles.myTicketsLink}>{t("search.myTickets")}</Text>
       </TouchableOpacity>
 
       <TouchableOpacity onPress={() => navigation.navigate("StaffLogin")}>
-        <Text style={styles.staffLink}>Staff login</Text>
+        <Text style={styles.staffLink}>{t("search.staffLink")}</Text>
       </TouchableOpacity>
+
+      <BrandFooter />
     </KeyboardAvoidingView>
   );
 }

@@ -1,14 +1,16 @@
 import React from "react";
 import { View, Text, FlatList, TouchableOpacity, StyleSheet } from "react-native";
 import { useTheme } from "../context/ThemeContext";
+import { useLanguage } from "../context/LanguageContext";
 
 export default function ResultsScreen({ route, navigation }) {
   const { theme } = useTheme();
   const styles = createStyles(theme);
+  const { t, locale } = useLanguage();
   const { schedules, departureCity, destinationCity } = route.params;
 
   function renderItem({ item }) {
-    const company = item.tenantId?.companyName || "Unknown company";
+    const company = item.tenantId?.companyName || t("results.unknownCompany");
     const bus = item.busId;
     const departure = new Date(item.departureTime);
 
@@ -33,11 +35,11 @@ export default function ResultsScreen({ route, navigation }) {
           <Text style={styles.price}>{item.routeId?.basePrice?.toLocaleString()} XAF</Text>
         </View>
         <Text style={styles.time}>
-          {departure.toLocaleDateString()} · {departure.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+          {departure.toLocaleDateString(locale)} · {departure.toLocaleTimeString(locale, { hour: "2-digit", minute: "2-digit" })}
         </Text>
         <View style={styles.row}>
           <Text style={styles.meta}>{bus?.busClass} · {bus?.registrationNumber}</Text>
-          <Text style={styles.meta}>{item.availableSeats.length} seats left</Text>
+          <Text style={styles.meta}>{t("results.seatsLeft", { n: item.availableSeats.length })}</Text>
         </View>
       </TouchableOpacity>
     );
@@ -53,7 +55,7 @@ export default function ResultsScreen({ route, navigation }) {
         keyExtractor={(item) => item._id}
         renderItem={renderItem}
         ListEmptyComponent={
-          <Text style={styles.empty}>No trips found for this route yet. Try another date.</Text>
+          <Text style={styles.empty}>{t("results.empty")}</Text>
         }
         contentContainerStyle={{ paddingBottom: 24 }}
       />

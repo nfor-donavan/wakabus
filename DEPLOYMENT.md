@@ -187,6 +187,17 @@ When you're ready for the Play Store, the `production` profile in
 `.apk` — `eas build --profile production --platform android`, then
 `eas submit` to upload it. Not needed for now.
 
+## Updating an existing deployment (counter sales, branding, French)
+
+1. `git add -A && git commit -m "Nexus branding, counter sales, professional manifest, French app" && git push`.
+2. **Backend (Render):** redeploys automatically and installs the new `qrcode` dependency. No new
+   environment variables are needed.
+3. **Both dashboards (Render static sites):** trigger a manual redeploy so Vite rebuilds with the new
+   logo files and screens.
+4. **Passenger app:** the splash screen, preloader and French live in the app bundle, so you need a
+   new build: `cd mobile-passenger-app && npm install && eas build --profile preview --platform android`.
+   If `expo-camera` is not installed yet, run `npx expo install expo-camera` first.
+
 ## Quick checklist, in order
 
 - [ ] MongoDB Atlas cluster created, IP access open, connection string copied

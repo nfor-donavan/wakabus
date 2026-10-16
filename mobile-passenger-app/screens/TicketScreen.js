@@ -4,10 +4,12 @@ import QRCode from "react-native-qrcode-svg";
 import { api } from "../services/api";
 import { saveTicketOffline } from "../services/ticketStorage";
 import { useTheme } from "../context/ThemeContext";
+import { useLanguage } from "../context/LanguageContext";
 
 export default function TicketScreen({ route, navigation }) {
   const { theme } = useTheme();
   const styles = createStyles(theme);
+  const { t, locale } = useLanguage();
   const { bookingId, tenantId, companyName } = route.params;
   const [ticket, setTicket] = useState(null);
   const [error, setError] = useState("");
@@ -38,7 +40,7 @@ export default function TicketScreen({ route, navigation }) {
     return (
       <View style={styles.center}>
         <ActivityIndicator size="large" color={theme.navy} />
-        <Text style={styles.loadingText}>Issuing your ticket…</Text>
+        <Text style={styles.loadingText}>{t("ticket.issuing")}</Text>
       </View>
     );
   }
@@ -53,7 +55,7 @@ export default function TicketScreen({ route, navigation }) {
           {ticket.departureCity} → {ticket.destinationCity}
         </Text>
         <Text style={styles.time}>
-          {departure.toLocaleDateString()} · {departure.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+          {departure.toLocaleDateString(locale)} · {departure.toLocaleTimeString(locale, { hour: "2-digit", minute: "2-digit" })}
         </Text>
 
         {/* QR wrapper stays a fixed white card even in dark mode — a QR
@@ -67,26 +69,26 @@ export default function TicketScreen({ route, navigation }) {
 
         <View style={styles.detailsRow}>
           <View>
-            <Text style={styles.detailLabel}>Seat</Text>
+            <Text style={styles.detailLabel}>{t("ticket.seat")}</Text>
             <Text style={styles.detailValue}>{ticket.seatNumber}</Text>
           </View>
           <View>
-            <Text style={styles.detailLabel}>Passenger</Text>
+            <Text style={styles.detailLabel}>{t("ticket.passenger")}</Text>
             <Text style={styles.detailValue}>{ticket.passengerName}</Text>
           </View>
           <View>
-            <Text style={styles.detailLabel}>Fare</Text>
+            <Text style={styles.detailLabel}>{t("ticket.fare")}</Text>
             <Text style={styles.detailValue}>{ticket.farePaid?.toLocaleString()} XAF</Text>
           </View>
         </View>
 
         <Text style={styles.offlineNote}>
-          Saved on this device — this screen works even with no signal at the terminal.
+          {t("ticket.offlineNote")}
         </Text>
       </View>
 
       <TouchableOpacity style={styles.doneButton} onPress={() => navigation.popToTop()}>
-        <Text style={styles.doneText}>Book another trip</Text>
+        <Text style={styles.doneText}>{t("ticket.bookAnother")}</Text>
       </TouchableOpacity>
     </View>
   );

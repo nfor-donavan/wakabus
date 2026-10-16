@@ -11,6 +11,7 @@ import {
 } from "react-native";
 import { api } from "../services/api";
 import { useTheme } from "../context/ThemeContext";
+import { useLanguage } from "../context/LanguageContext";
 
 /**
  * Full passenger flow from here:
@@ -23,6 +24,7 @@ import { useTheme } from "../context/ThemeContext";
 export default function BookingScreen({ route, navigation }) {
   const { theme } = useTheme();
   const styles = createStyles(theme);
+  const { t } = useLanguage();
   const { tenantId, companyName, scheduleId, seatNumber, farePaid } = route.params;
   const [passengerName, setPassengerName] = useState("");
   const [passengerIdCard, setPassengerIdCard] = useState("");
@@ -32,7 +34,7 @@ export default function BookingScreen({ route, navigation }) {
 
   async function handleReserve() {
     if (!passengerName || !passengerIdCard || !passengerPhone) {
-      Alert.alert("Missing info", "Fill in your name, ID card number, and phone.");
+      Alert.alert(t("common.missingInfo"), t("booking.fillAll"));
       return;
     }
     setStatus("reserving");
@@ -52,12 +54,12 @@ export default function BookingScreen({ route, navigation }) {
       // data.bookingId as the payment reference so the webhook
       // (backend/controllers/paymentController.js) can match it back.
       Alert.alert(
-        "Seat held",
-        `Complete the Mobile Money prompt on your phone. Your seat is held for a limited time.`
+        t("booking.seatHeld"),
+        t("booking.seatHeldBody")
       );
     } catch (err) {
       setStatus("error");
-      Alert.alert("Reservation failed", err.message);
+      Alert.alert(t("booking.reserveFailed"), err.message);
     }
   }
 
@@ -70,26 +72,26 @@ export default function BookingScreen({ route, navigation }) {
         navigation.replace("Ticket", { bookingId, tenantId, companyName });
       } else if (paymentStatus === "Pending") {
         setStatus("held");
-        Alert.alert("Still pending", "Payment hasn't been confirmed yet — try again in a moment.");
+        Alert.alert(t("booking.stillPending"), t("booking.stillPendingBody"));
       } else {
         setStatus("error");
-        Alert.alert("Payment not completed", `Status: ${paymentStatus}. Please try booking again.`);
+        Alert.alert(t("booking.notCompleted"), t("booking.notCompletedBody", { status: paymentStatus }));
       }
     } catch (err) {
       setStatus("held");
-      Alert.alert("Couldn't check status", err.message);
+      Alert.alert(t("booking.statusFailed"), err.message);
     }
   }
 
   return (
     <View style={styles.container}>
       <Image source={require("../assets/app-icon.png")} style={styles.logo} />
-      <Text style={styles.title}>Seat {seatNumber} · {companyName}</Text>
+      <Text style={styles.title}>{t("booking.seatCompany", { n: seatNumber, company: companyName })}</Text>
       <Text style={styles.fare}>{farePaid?.toLocaleString()} XAF</Text>
 
       <TextInput
         style={styles.input}
-        placeholder="Full name"
+        placeholder={t("booking.fullName")}
         placeholderTextColor={theme.muted}
         value={passengerName}
         onChangeText={setPassengerName}
@@ -97,7 +99,7 @@ export default function BookingScreen({ route, navigation }) {
       />
       <TextInput
         style={styles.input}
-        placeholder="National ID card number"
+        placeholder={t("booking.idCard")}
         placeholderTextColor={theme.muted}
         value={passengerIdCard}
         onChangeText={setPassengerIdCard}
@@ -105,7 +107,7 @@ export default function BookingScreen({ route, navigation }) {
       />
       <TextInput
         style={styles.input}
-        placeholder="Phone (Mobile Money number)"
+        placeholder={t("booking.phone")}
         placeholderTextColor={theme.muted}
         value={passengerPhone}
         onChangeText={setPassengerPhone}
@@ -115,7 +117,7 @@ export default function BookingScreen({ route, navigation }) {
 
       {(status === "idle" || status === "error") && (
         <TouchableOpacity style={styles.button} onPress={handleReserve}>
-          <Text style={styles.buttonText}>Reserve seat & pay</Text>
+          <Text style={styles.buttonText}>{t("booking.reserveAndPay")}</Text>
         </TouchableOpacity>
       )}
 
@@ -123,7 +125,7 @@ export default function BookingScreen({ route, navigation }) {
 
       {status === "held" && (
         <TouchableOpacity style={styles.button} onPress={handleCheckPayment}>
-          <Text style={styles.buttonText}>I've completed payment — check status</Text>
+          <Text style={styles.buttonText}>{t("booking.checkPayment")}</Text>
         </TouchableOpacity>
       )}
 

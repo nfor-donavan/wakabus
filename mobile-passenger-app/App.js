@@ -1,10 +1,12 @@
-import React from "react";
-import { TouchableOpacity } from "react-native";
+import React, { useEffect, useState } from "react";
+import { View, TouchableOpacity, Text } from "react-native";
 import { NavigationContainer, DefaultTheme, DarkTheme } from "@react-navigation/native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import Svg, { Circle, Path } from "react-native-svg";
 
 import { ThemeProvider, useTheme } from "./context/ThemeContext";
+import { LanguageProvider, useLanguage } from "./context/LanguageContext";
+import BrandPreloader from "./components/BrandPreloader";
 import SearchScreen from "./screens/SearchScreen";
 import ResultsScreen from "./screens/ResultsScreen";
 import SeatSelectionScreen from "./screens/SeatSelectionScreen";
@@ -32,17 +34,25 @@ function MoonIcon() {
   );
 }
 
-function ThemeToggleButton() {
+// Header controls shown on every screen: language switch + dark/light switch.
+function HeaderControls() {
   const { theme, toggleTheme } = useTheme();
+  const { t, toggleLang } = useLanguage();
   return (
-    <TouchableOpacity onPress={toggleTheme} style={{ marginRight: 14, padding: 4 }}>
-      {theme.mode === "light" ? <MoonIcon /> : <SunIcon />}
-    </TouchableOpacity>
+    <View style={{ flexDirection: "row", alignItems: "center" }}>
+      <TouchableOpacity onPress={toggleLang} style={{ paddingHorizontal: 10, paddingVertical: 4 }}>
+        <Text style={{ color: "#fff", fontWeight: "700", fontSize: 13 }}>{t("common.langToggle")}</Text>
+      </TouchableOpacity>
+      <TouchableOpacity onPress={toggleTheme} style={{ marginRight: 10, padding: 4 }}>
+        {theme.mode === "light" ? <MoonIcon /> : <SunIcon />}
+      </TouchableOpacity>
+    </View>
   );
 }
 
 function Navigation() {
   const { theme } = useTheme();
+  const { t } = useLanguage();
 
   const navTheme = {
     ...(theme.mode === "dark" ? DarkTheme : DefaultTheme),
@@ -64,38 +74,55 @@ function Navigation() {
           headerStyle: { backgroundColor: theme.navy },
           headerTintColor: "#fff",
           headerTitleStyle: { fontWeight: "700" },
-          headerRight: () => <ThemeToggleButton />,
+          headerRight: () => <HeaderControls />,
         }}
       >
-        <Stack.Screen name="Search" component={SearchScreen} options={{ title: "WakaBus" }} />
-        <Stack.Screen name="Results" component={ResultsScreen} options={{ title: "Available trips" }} />
-        <Stack.Screen
-          name="SeatSelection"
-          component={SeatSelectionScreen}
-          options={{ title: "Choose your seat" }}
-        />
-        <Stack.Screen name="Booking" component={BookingScreen} options={{ title: "Passenger details" }} />
+        <Stack.Screen name="Search" component={SearchScreen} options={{ title: t("nav.search") }} />
+        <Stack.Screen name="Results" component={ResultsScreen} options={{ title: t("nav.results") }} />
+        <Stack.Screen name="SeatSelection" component={SeatSelectionScreen} options={{ title: t("nav.seat") }} />
+        <Stack.Screen name="Booking" component={BookingScreen} options={{ title: t("nav.booking") }} />
         <Stack.Screen
           name="Ticket"
           component={TicketScreen}
-          options={{ title: "Your ticket", headerBackVisible: false }}
+          options={{ title: t("nav.ticket"), headerBackVisible: false }}
         />
-        <Stack.Screen name="MyTickets" component={MyTicketsScreen} options={{ title: "My tickets" }} />
-        <Stack.Screen name="StaffLogin" component={StaffLoginScreen} options={{ title: "Staff login" }} />
+        <Stack.Screen name="MyTickets" component={MyTicketsScreen} options={{ title: t("nav.myTickets") }} />
+        <Stack.Screen name="StaffLogin" component={StaffLoginScreen} options={{ title: t("nav.staffLogin") }} />
         <Stack.Screen
           name="StaffScanner"
           component={StaffScannerScreen}
-          options={{ title: "Package scanner", headerBackVisible: false }}
+          options={{ title: t("nav.scanner"), headerBackVisible: false }}
         />
       </Stack.Navigator>
     </NavigationContainer>
   );
 }
 
+// The native splash (app.json) hands over to this branded preloader while the
+// saved theme + language load. A short minimum display time keeps the hand-over
+// from flashing past.
+function Root() {
+  const { ready: themeReady } = useTheme();
+  const { ready: langReady, t } = useLanguage();
+  const [minElapsed, setMinElapsed] = useState(false);
+
+  useEffect(() => {
+    const id = setTimeout(() => setMinElapsed(true), 800);
+    return () => clearTimeout(id);
+  }, []);
+
+  if (!themeReady || !langReady || !minElapsed) {
+    return <BrandPreloader text={t("brand.initializing")} />;
+  }
+  return <Navigation />;
+}
+
 export default function App() {
   return (
     <ThemeProvider>
-      <Navigation />
+      <LanguageProvider>
+        <Root />
+      </LanguageProvider>
     </ThemeProvider>
   );
 }

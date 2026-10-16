@@ -10,17 +10,19 @@ import {
 } from "react-native";
 import { staffApi } from "../services/staffApi";
 import { useTheme } from "../context/ThemeContext";
+import { useLanguage } from "../context/LanguageContext";
 
 export default function StaffLoginScreen({ navigation }) {
   const { theme } = useTheme();
   const styles = createStyles(theme);
+  const { t } = useLanguage();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
 
   async function handleLogin() {
     if (!email || !password) {
-      Alert.alert("Missing info", "Enter your email and password.");
+      Alert.alert(t("common.missingInfo"), t("staff.enterCreds"));
       return;
     }
     setLoading(true);
@@ -28,7 +30,7 @@ export default function StaffLoginScreen({ navigation }) {
       await staffApi.login(email.trim(), password);
       navigation.replace("StaffScanner");
     } catch (err) {
-      Alert.alert("Login failed", err.message);
+      Alert.alert(t("staff.loginFailed"), err.message);
     } finally {
       setLoading(false);
     }
@@ -36,12 +38,12 @@ export default function StaffLoginScreen({ navigation }) {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Staff login</Text>
-      <Text style={styles.subtitle}>For counter agents and agency admins only</Text>
+      <Text style={styles.title}>{t("staff.title")}</Text>
+      <Text style={styles.subtitle}>{t("staff.subtitle")}</Text>
 
       <TextInput
         style={styles.input}
-        placeholder="Email"
+        placeholder={t("staff.email")}
         placeholderTextColor={theme.muted}
         value={email}
         onChangeText={setEmail}
@@ -50,7 +52,7 @@ export default function StaffLoginScreen({ navigation }) {
       />
       <TextInput
         style={styles.input}
-        placeholder="Password"
+        placeholder={t("staff.password")}
         placeholderTextColor={theme.muted}
         value={password}
         onChangeText={setPassword}
@@ -61,7 +63,7 @@ export default function StaffLoginScreen({ navigation }) {
         <ActivityIndicator size="large" color={theme.navy} />
       ) : (
         <TouchableOpacity style={styles.button} onPress={handleLogin}>
-          <Text style={styles.buttonText}>Sign in</Text>
+          <Text style={styles.buttonText}>{t("staff.signIn")}</Text>
         </TouchableOpacity>
       )}
     </View>

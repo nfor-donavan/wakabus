@@ -11,19 +11,21 @@ import {
 import { CameraView, useCameraPermissions } from "expo-camera";
 import { staffApi } from "../services/staffApi";
 import { useTheme } from "../context/ThemeContext";
+import { useLanguage } from "../context/LanguageContext";
 
 const NEXT_STATUS = {
   Received_At_Origin: "Loaded_On_Bus",
   Loaded_On_Bus: "Arrived_At_Destination",
 };
 const NEXT_STATUS_LABEL = {
-  Loaded_On_Bus: "Mark loaded on bus",
-  Arrived_At_Destination: "Mark arrived at destination",
+  Loaded_On_Bus: "scan.markLoaded",
+  Arrived_At_Destination: "scan.markArrived",
 };
 
 export default function StaffScannerScreen({ navigation }) {
   const { theme } = useTheme();
   const styles = createStyles(theme);
+  const { t } = useLanguage();
   const [permission, requestPermission] = useCameraPermissions();
   const [scannedCode, setScannedCode] = useState(null);
   const [pkg, setPkg] = useState(null);
@@ -42,7 +44,7 @@ export default function StaffScannerScreen({ navigation }) {
       const result = await staffApi.getPackageByTrackingCode(data.trim());
       setPkg(result);
     } catch (err) {
-      Alert.alert("Not found", err.message, [{ text: "Scan again", onPress: resetScanner }]);
+      Alert.alert(t("scan.notFound"), err.message, [{ text: t("scan.scanAgain"), onPress: resetScanner }]);
     } finally {
       setLoading(false);
     }
@@ -66,9 +68,9 @@ export default function StaffScannerScreen({ navigation }) {
     try {
       const updated = await staffApi.updatePackageStatus(pkg._id, nextStatus);
       setPkg(updated);
-      Alert.alert("Updated", `${pkg.trackingCode} is now "${nextStatus.replace(/_/g, " ")}".`);
+      Alert.alert(t("scan.updated"), t("scan.updatedBody", { code: pkg.trackingCode, status: t(`scan.status.${nextStatus}`) }));
     } catch (err) {
-      Alert.alert("Update failed", err.message);
+      Alert.alert(t("scan.updateFailed"), err.message);
     } finally {
       setLoading(false);
     }
@@ -76,17 +78,17 @@ export default function StaffScannerScreen({ navigation }) {
 
   async function handleVerifyPickup() {
     if (!otp.trim()) {
-      Alert.alert("Enter the code", "Ask the recipient for the pickup code they were texted.");
+      Alert.alert(t("scan.enterCode"), t("scan.enterCodeBody"));
       return;
     }
     setLoading(true);
     try {
       await staffApi.verifyPickup(pkg.trackingCode, otp.trim());
-      Alert.alert("Handed over", `${pkg.trackingCode} marked as collected.`, [
-        { text: "Scan next", onPress: resetScanner },
+      Alert.alert(t("scan.handedOver"), t("scan.handedOverBody", { code: pkg.trackingCode }), [
+        { text: t("scan.scanNext"), onPress: resetScanner },
       ]);
     } catch (err) {
-      Alert.alert("Verification failed", err.message);
+      Alert.alert(t("scan.verifyFailed"), err.message);
     } finally {
       setLoading(false);
     }
@@ -98,9 +100,9 @@ export default function StaffScannerScreen({ navigation }) {
   if (!permission.granted) {
     return (
       <View style={styles.center}>
-        <Text style={styles.permissionText}>Camera access is needed to scan package labels.</Text>
+        <Text style={styles.permissionText}>{t("scan.cameraNeeded")}</Text>
         <TouchableOpacity style={styles.button} onPress={requestPermission}>
-          <Text style={styles.buttonText}>Grant permission</Text>
+          <Text style={styles.buttonText}>{t("scan.grant")}</Text>
         </TouchableOpacity>
       </View>
     );
@@ -115,7 +117,7 @@ export default function StaffScannerScreen({ navigation }) {
           onBarcodeScanned={handleBarcodeScanned}
         >
           <View style={styles.scanFrame} />
-          <Text style={styles.scanHint}>Point the camera at a package's tracking code</Text>
+          <Text style={styles.scanHint}>{t("scan.hint")}</Text>
         </CameraView>
       )}
 
@@ -128,17 +130,17 @@ export default function StaffScannerScreen({ navigation }) {
               <Text style={styles.trackingCode}>{pkg.trackingCode}</Text>
               <Text style={styles.detail}>{pkg.packageDetails?.description}</Text>
               <Text style={styles.detailMuted}>
-                From {pkg.sender?.name} ({pkg.sender?.phone})
+                {t("scan.from", { name: pkg.sender?.name, phone: pkg.sender?.phone })}
               </Text>
               <Text style={styles.detailMuted}>
-                To {pkg.recipient?.name} ({pkg.recipient?.phone})
+                {t("scan.to", { name: pkg.recipient?.name, phone: pkg.recipient?.phone })}
               </Text>
-              <Text style={styles.status}>{pkg.status.replace(/_/g, " ")}</Text>
+              <Text style={styles.status}>{t(`scan.status.${pkg.status}`)}</Text>
 
               {NEXT_STATUS[pkg.status] && (
                 <TouchableOpacity style={styles.button} onPress={handleAdvance} disabled={loading}>
                   <Text style={styles.buttonText}>
-                    {loading ? "Updating…" : NEXT_STATUS_LABEL[NEXT_STATUS[pkg.status]]}
+                    {loading ? t("scan.updating") : t(NEXT_STATUS_LABEL[NEXT_STATUS[pkg.status]])}
                   </Text>
                 </TouchableOpacity>
               )}
@@ -147,7 +149,7 @@ export default function StaffScannerScreen({ navigation }) {
                 <>
                   <TextInput
                     style={styles.input}
-                    placeholder="Pickup code from recipient"
+                    placeholder={t("scan.pickupPlaceholder")}
                     placeholderTextColor={theme.muted}
                     value={otp}
                     onChangeText={setOtp}
@@ -155,25 +157,25 @@ export default function StaffScannerScreen({ navigation }) {
                     maxLength={4}
                   />
                   <TouchableOpacity style={styles.button} onPress={handleVerifyPickup} disabled={loading}>
-                    <Text style={styles.buttonText}>{loading ? "Verifying…" : "Verify & hand over"}</Text>
+                    <Text style={styles.buttonText}>{loading ? t("scan.verifying") : t("scan.verifyButton")}</Text>
                   </TouchableOpacity>
                 </>
               )}
 
               {pkg.status === "Collected" && (
-                <Text style={styles.detailMuted}>Already collected — nothing more to do.</Text>
+                <Text style={styles.detailMuted}>{t("scan.alreadyCollected")}</Text>
               )}
             </>
           )}
 
           <TouchableOpacity style={styles.secondaryButton} onPress={resetScanner}>
-            <Text style={styles.secondaryButtonText}>Scan next package</Text>
+            <Text style={styles.secondaryButtonText}>{t("scan.scanNextPackage")}</Text>
           </TouchableOpacity>
         </View>
       )}
 
       <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
-        <Text style={styles.secondaryButtonText}>Log out of staff mode</Text>
+        <Text style={styles.secondaryButtonText}>{t("scan.logout")}</Text>
       </TouchableOpacity>
     </View>
   );

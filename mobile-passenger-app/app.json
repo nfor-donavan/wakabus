@@ -6,9 +6,9 @@
     "orientation": "portrait",
     "icon": "./assets/app-icon.png",
     "splash": {
-      "image": "./assets/app-icon.png",
+      "image": "./assets/nexus-splash.png",
       "resizeMode": "contain",
-      "backgroundColor": "#0B2E8A"
+      "backgroundColor": "#FFFFFF"
     },
     "android": {
       "package": "com.wakabus.passenger",

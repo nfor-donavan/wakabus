@@ -1,6 +1,8 @@
 import React, { useState } from "react";
 import { api } from "../api.js";
 import { useLanguage } from "../i18n.jsx";
+import BrandLogo from "../components/BrandLogo.jsx";
+import { BRAND } from "../branding.js";
 
 function FeatureIcon() {
   return (
@@ -75,14 +77,14 @@ export default function Login({ onLoggedIn }) {
 
       <div className="auth-form-panel">
         <form className="auth-form-card" onSubmit={handleSubmit}>
-          <button
-            type="button"
-            className="icon-toggle"
-            style={{ marginBottom: 16 }}
-            onClick={toggleLang}
-          >
-            {t("common.langToggle")}
-          </button>
+          <div className="auth-card-top">
+            <button type="button" className="icon-toggle" onClick={toggleLang}>
+              {t("common.langToggle")}
+            </button>
+          </div>
+
+          <BrandLogo width={170} />
+          <p className="auth-slogan">{BRAND.slogan}</p>
 
           <h1>{t("login.title")}</h1>
           <p className="auth-subtitle">{t("login.subtitle")}</p>
@@ -137,6 +139,7 @@ export default function Login({ onLoggedIn }) {
 
           <p className="auth-footer-note">{t("login.needAccess")}</p>
         </form>
+        <p className="auth-powered">{t("brand.poweredBy")}</p>
       </div>
     </div>
   );

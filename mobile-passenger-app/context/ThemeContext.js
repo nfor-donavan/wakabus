@@ -32,19 +32,21 @@ const DARK = {
   success: "#3ECB79",
 };
 
-const ThemeContext = createContext({ theme: LIGHT, toggleTheme: () => {} });
+const ThemeContext = createContext({ theme: LIGHT, toggleTheme: () => {}, ready: false });
 
 export function ThemeProvider({ children }) {
   // Starts from the phone's own system setting, then a manual toggle
   // overrides it and is remembered from then on.
   const [mode, setMode] = useState(Appearance.getColorScheme() === "dark" ? "dark" : "light");
+  const [ready, setReady] = useState(false);
 
   useEffect(() => {
     AsyncStorage.getItem(STORAGE_KEY)
       .then((saved) => {
         if (saved === "light" || saved === "dark") setMode(saved);
       })
-      .catch(() => {});
+      .catch(() => {})
+      .finally(() => setReady(true));
   }, []);
 
   function toggleTheme() {
@@ -57,7 +59,7 @@ export function ThemeProvider({ children }) {
 
   const theme = mode === "dark" ? DARK : LIGHT;
 
-  return <ThemeContext.Provider value={{ theme, toggleTheme }}>{children}</ThemeContext.Provider>;
+  return <ThemeContext.Provider value={{ theme, toggleTheme, ready }}>{children}</ThemeContext.Provider>;
 }
 
 export function useTheme() {

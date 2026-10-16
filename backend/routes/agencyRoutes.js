@@ -21,6 +21,8 @@ router.delete("/schedules/:scheduleId", requireRole("agency_admin"), asyncHandle
 router.post("/schedules/:scheduleId/block-seats", asyncHandler(ctrl.blockSeats));
 router.post("/schedules/:scheduleId/unblock-seats", asyncHandler(ctrl.unblockSeats));
 
+router.post("/counter-sales", asyncHandler(ctrl.createCounterSale));
+router.get("/bookings/:bookingId/ticket-pdf", asyncHandler(ctrl.getTicketPdf));
 router.post("/bookings/:bookingId/cancel", asyncHandler(ctrl.cancelBooking));
 router.get("/schedules/:scheduleId/bookings", asyncHandler(ctrl.listBookingsForSchedule));
 router.post("/bookings/:bookingId/luggage", asyncHandler(ctrl.addLuggage));
