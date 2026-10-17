@@ -5,6 +5,8 @@ const asyncHandler = require("../middleware/asyncHandler");
 const ctrl = require("../controllers/agencyController");
 const rentalCtrl = require("../controllers/rentalController");
 const packageCtrl = require("../controllers/packageController");
+const staffCtrl = require("../controllers/staffController");
+const reportCtrl = require("../controllers/reportController");
 
 router.use(requireAuth, requireRole("agency_admin", "counter_agent"));
 
@@ -14,6 +16,7 @@ router.get("/buses", asyncHandler(ctrl.listBuses));
 router.post("/routes", requireRole("agency_admin"), asyncHandler(ctrl.createRoute));
 router.get("/routes", asyncHandler(ctrl.listRoutes));
 
+router.post("/schedules/bulk", requireRole("agency_admin"), asyncHandler(ctrl.bulkCreateSchedules));
 router.post("/schedules", requireRole("agency_admin"), asyncHandler(ctrl.createSchedule));
 router.get("/schedules", asyncHandler(ctrl.listSchedules));
 router.patch("/schedules/:scheduleId/status", asyncHandler(ctrl.updateScheduleStatus));
@@ -22,6 +25,12 @@ router.post("/schedules/:scheduleId/block-seats", asyncHandler(ctrl.blockSeats))
 router.post("/schedules/:scheduleId/unblock-seats", asyncHandler(ctrl.unblockSeats));
 
 router.post("/counter-sales", asyncHandler(ctrl.createCounterSale));
+router.get("/reports/sales", asyncHandler(reportCtrl.salesReport));
+
+// Staff accounts — admin only. Deactivating an account locks it out immediately.
+router.get("/staff", requireRole("agency_admin"), asyncHandler(staffCtrl.listStaff));
+router.post("/staff", requireRole("agency_admin"), asyncHandler(staffCtrl.createStaff));
+router.patch("/staff/:staffId", requireRole("agency_admin"), asyncHandler(staffCtrl.updateStaff));
 router.get("/bookings/:bookingId/ticket-pdf", asyncHandler(ctrl.getTicketPdf));
 router.post("/bookings/:bookingId/cancel", asyncHandler(ctrl.cancelBooking));
 router.get("/schedules/:scheduleId/bookings", asyncHandler(ctrl.listBookingsForSchedule));

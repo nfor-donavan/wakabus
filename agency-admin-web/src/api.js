@@ -14,6 +14,13 @@ async function request(path, { method = "GET", body, isBlob } = {}) {
     body: body ? JSON.stringify(body) : undefined,
   });
 
+  // A deactivated or deleted account is refused by the server — send the user back to login.
+  if (res.status === 401 && path !== "/auth/login") {
+    localStorage.removeItem("agency_token");
+    localStorage.removeItem("agency_user");
+    window.location.reload();
+  }
+
   if (isBlob) {
     if (!res.ok) throw new Error("Request failed");
     return res.blob();
@@ -69,6 +76,15 @@ export const api = {
     request(`/agency/rentals/${rentalId}`, { method: "PATCH", body: payload }),
   deleteRental: (rentalId) => request(`/agency/rentals/${rentalId}`, { method: "DELETE" }),
 
+  listStaff: () => request("/agency/staff"),
+  createStaff: (payload) => request("/agency/staff", { method: "POST", body: payload }),
+  updateStaff: (staffId, payload) => request(`/agency/staff/${staffId}`, { method: "PATCH", body: payload }),
+  salesReport: (from, to, agentId) => {
+    const params = new URLSearchParams({ from, to });
+    if (agentId) params.append("agentId", agentId);
+    return request(`/agency/reports/sales?${params.toString()}`);
+  },
+  bulkCreateSchedules: (payload) => request("/agency/schedules/bulk", { method: "POST", body: payload }),
   createCounterSale: (payload) => request("/agency/counter-sales", { method: "POST", body: payload }),
   downloadTicketPdf: (bookingId) => request(`/agency/bookings/${bookingId}/ticket-pdf`, { isBlob: true }),
 

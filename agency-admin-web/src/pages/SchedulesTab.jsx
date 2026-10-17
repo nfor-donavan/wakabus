@@ -1,9 +1,12 @@
 import React, { useEffect, useState } from "react";
 import { api } from "../api.js";
 import { useLanguage } from "../i18n.jsx";
+import BulkTripsCard from "../components/BulkTripsCard.jsx";
 
-export default function SchedulesTab() {
+export default function SchedulesTab({ user }) {
   const { t } = useLanguage();
+  // Cashiers can view trips, sell, block seats and change status; only an admin creates or deletes trips.
+  const isAdmin = user?.role === "agency_admin";
   const [schedules, setSchedules] = useState([]);
   const [buses, setBuses] = useState([]);
   const [routes, setRoutes] = useState([]);
@@ -125,6 +128,7 @@ export default function SchedulesTab() {
 
   return (
     <>
+      {isAdmin && (
       <div className="card">
         <h2>{t("schedulesTab.createTitle")}</h2>
         <form onSubmit={handleCreate}>
@@ -167,6 +171,9 @@ export default function SchedulesTab() {
           </button>
         </form>
       </div>
+      )}
+
+      {isAdmin && <BulkTripsCard buses={buses} routes={routes} onCreated={load} />}
 
       <div className="card">
         <h2>{t("schedulesTab.upcoming")}</h2>
@@ -223,9 +230,11 @@ export default function SchedulesTab() {
                   </button>
                 </td>
                 <td>
-                  <button className="danger" onClick={() => handleDelete(s)}>
-                    {t("schedulesTab.deleteButton")}
-                  </button>
+                  {isAdmin && (
+                    <button className="danger" onClick={() => handleDelete(s)}>
+                      {t("schedulesTab.deleteButton")}
+                    </button>
+                  )}
                 </td>
               </tr>
             ))}

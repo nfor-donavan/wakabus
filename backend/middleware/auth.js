@@ -1,25 +1,39 @@
 const jwt = require("jsonwebtoken");
+const Agent = require("../models/Agent");
 
 /**
- * requireAuth: verifies the JWT and attaches req.user = { id, role, tenantId }.
- * tenantId comes from the TOKEN, never from the request body/params — this is
- * the core of the "tenantId isolation must be enforced in middleware" fix.
- * An agency_admin or counter_agent literally cannot query another tenant's
- * data because their JWT only carries their own tenantId, and every
- * controller below scopes every query with req.user.tenantId, and the
- * tenantScope Mongoose plugin throws if that's ever forgotten.
+ * requireAuth: verifies the JWT, then re-checks the account in the database.
+ * Role and tenantId come from the database record (never from the request body),
+ * and a deactivated account is refused immediately instead of staying valid until
+ * its token expires — important when cashiers change often.
+ * The cost is one indexed lookup by _id per request.
  */
-function requireAuth(req, res, next) {
+async function requireAuth(req, res, next) {
   const header = req.headers.authorization || "";
   const token = header.startsWith("Bearer ") ? header.slice(7) : null;
   if (!token) return res.status(401).json({ message: "Missing auth token" });
 
+  let decoded;
   try {
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    req.user = decoded; // { id, role, tenantId }
-    next();
+    decoded = jwt.verify(token, process.env.JWT_SECRET);
   } catch (err) {
     return res.status(401).json({ message: "Invalid or expired token" });
+  }
+
+  try {
+    const agent = await Agent.findOne({ _id: decoded.id }).select("isActive fullName role tenantId");
+    if (!agent || !agent.isActive) {
+      return res.status(401).json({ message: "This account is no longer active" });
+    }
+    req.user = {
+      id: String(agent._id),
+      role: agent.role,
+      tenantId: agent.tenantId ? String(agent.tenantId) : null,
+      fullName: agent.fullName,
+    };
+    next();
+  } catch (err) {
+    next(err);
   }
 }
 

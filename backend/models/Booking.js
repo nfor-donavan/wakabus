@@ -37,6 +37,11 @@ const BookingSchema = new mongoose.Schema(
     cancelledBy: { type: mongoose.Schema.Types.ObjectId, ref: "Agent" },
     refundReference: String,
 
+    // Who made a counter sale (for per-cashier reports and cash reconciliation).
+    // Name is copied onto the booking so reports still read correctly if the account is renamed.
+    soldBy: { type: mongoose.Schema.Types.ObjectId, ref: "Agent" },
+    soldByName: String,
+
     // Luggage checked in against this ticket. Each piece gets its own short
     // tag code — the same code goes on a physical tag attached to the bag
     // and on the stub handed to the passenger, so either side can be

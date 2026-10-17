@@ -7,22 +7,33 @@ import BookingsTab from "./pages/BookingsTab.jsx";
 import RentalsTab from "./pages/RentalsTab.jsx";
 import PackagesTab from "./pages/PackagesTab.jsx";
 import CounterTab from "./pages/CounterTab.jsx";
+import StaffTab from "./pages/StaffTab.jsx";
+import SalesTab from "./pages/SalesTab.jsx";
 import { useLanguage } from "./i18n.jsx";
 import BrandLoader from "./components/BrandLoader.jsx";
 import BrandFooter from "./components/BrandFooter.jsx";
 import { BRAND } from "./branding.js";
 
-function useTabs(t) {
-  return [
-    { id: "schedules", label: t("nav.schedules"), component: SchedulesTab },
+// Cashiers (counter_agent) only see what they use at the desk; fleet, routes and staff
+// accounts are for the agency admin. The server enforces this too — hiding is just tidiness.
+const ADMIN_ONLY = ["buses", "routes", "staff"];
+
+function useTabs(t, role) {
+  const all = [
     { id: "counter", label: t("nav.counter"), component: CounterTab },
+    { id: "schedules", label: t("nav.schedules"), component: SchedulesTab },
     { id: "bookings", label: t("nav.bookings"), component: BookingsTab },
     { id: "packages", label: t("nav.packages"), component: PackagesTab },
     { id: "rentals", label: t("nav.rentals"), component: RentalsTab },
+    { id: "sales", label: t("nav.sales"), component: SalesTab },
     { id: "buses", label: t("nav.fleet"), component: BusesTab },
     { id: "routes", label: t("nav.routes"), component: RoutesTab },
+    { id: "staff", label: t("nav.staff"), component: StaffTab },
   ];
+  return role === "agency_admin" ? all : all.filter((tab) => !ADMIN_ONLY.includes(tab.id));
 }
+
+const defaultTabFor = (role) => (role === "counter_agent" ? "counter" : "schedules");
 
 function SunIcon() {
   return (
@@ -46,7 +57,10 @@ export default function App() {
     const raw = localStorage.getItem("agency_user");
     return raw ? JSON.parse(raw) : null;
   });
-  const [activeTab, setActiveTab] = useState("schedules");
+  const [activeTab, setActiveTab] = useState(() => {
+    const raw = localStorage.getItem("agency_user");
+    return defaultTabFor(raw ? JSON.parse(raw).role : null);
+  });
   const [theme, setTheme] = useState(() => localStorage.getItem("wakabus_theme") || "light");
 
   // One short branded start-up screen per browser session (not on every reload
@@ -78,11 +92,19 @@ export default function App() {
   }
 
   if (!user) {
-    return <Login onLoggedIn={setUser} />;
+    return (
+      <Login
+        onLoggedIn={(u) => {
+          setUser(u);
+          setActiveTab(defaultTabFor(u.role));
+        }}
+      />
+    );
   }
 
-  const TABS = useTabs(t);
-  const ActiveComponent = TABS.find((tb) => tb.id === activeTab)?.component || SchedulesTab;
+  const TABS = useTabs(t, user.role);
+  const current = TABS.find((tb) => tb.id === activeTab) || TABS[0];
+  const ActiveComponent = current.component;
 
   return (
     <div className="app-shell">
@@ -94,7 +116,7 @@ export default function App() {
         {TABS.map((tab) => (
           <div
             key={tab.id}
-            className={`nav-item ${activeTab === tab.id ? "active" : ""}`}
+            className={`nav-item ${current.id === tab.id ? "active" : ""}`}
             onClick={() => setActiveTab(tab.id)}
           >
             {tab.label}
@@ -105,7 +127,7 @@ export default function App() {
         <div className="topbar">
           <div className="topbar-title">
             <img className="topbar-emblem" src={BRAND.emblem} alt={BRAND.company} />
-            <h1>{TABS.find((tb) => tb.id === activeTab)?.label}</h1>
+            <h1>{current.label}</h1>
           </div>
           <div className="topbar-actions">
             <span className="muted">
@@ -127,7 +149,7 @@ export default function App() {
           </div>
         </div>
         <div className="main-content">
-          <ActiveComponent />
+          <ActiveComponent user={user} />
         </div>
         <BrandFooter />
       </main>

@@ -474,3 +474,15 @@ th { color: var(--muted); font-weight: 600; font-size: 12px; text-transform: upp
 .counter-fare { font-size: 22px; font-weight: 700; color: var(--navy); margin: 4px 0 14px; }
 .sale-success { background: rgba(31, 157, 85, 0.1); border: 1px solid var(--success); border-radius: 12px; padding: 14px 16px; margin-bottom: 16px; }
 .sale-success strong { display: block; color: var(--success); margin-bottom: 4px; }
+
+/* ---------- Staff, sales report, bulk trips ---------- */
+.field-label { display: block; font-size: 11.5px; color: var(--muted); margin-bottom: 4px; font-weight: 600; }
+.stat-row { display: flex; gap: 32px; flex-wrap: wrap; }
+.stat-value { font-size: 20px; font-weight: 700; margin-top: 2px; }
+.weekday-row { display: flex; gap: 8px; flex-wrap: wrap; }
+.chip {
+  display: inline-flex; align-items: center; padding: 6px 12px; border-radius: 999px; cursor: pointer;
+  border: 1px solid var(--border); font-size: 13px; color: var(--muted); user-select: none;
+}
+.chip input { display: none; }
+.chip.on { background: var(--navy); border-color: var(--navy); color: #fff; }

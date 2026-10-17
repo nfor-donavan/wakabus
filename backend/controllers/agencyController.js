@@ -67,6 +67,60 @@ exports.createSchedule = async (req, res) => {
   res.status(201).json(schedule);
 };
 
+// POST /api/agency/schedules/bulk  { busId, routeId, departures: [ISO date-times], durationMinutes? }
+// Creates many trips at once (e.g. the same departures for the next 14 days). The browser
+// builds the exact departure date-times in the user's own time zone, so the server never
+// guesses time zones. Trips that already exist for the same bus, route and time are
+// skipped, which makes it safe to run again each week.
+exports.bulkCreateSchedules = async (req, res) => {
+  const { busId, routeId, departures, durationMinutes } = req.body;
+  const tenantId = req.user.tenantId;
+
+  if (!busId || !routeId || !Array.isArray(departures) || departures.length === 0) {
+    return res.status(400).json({ message: "busId, routeId and a non-empty departures list are required" });
+  }
+  if (departures.length > 200) {
+    return res.status(400).json({ message: "Create at most 200 trips at a time" });
+  }
+
+  const dates = [...new Set(departures.map((d) => new Date(d).getTime()))];
+  if (dates.some((ms) => Number.isNaN(ms))) {
+    return res.status(400).json({ message: "One or more departure times are invalid" });
+  }
+
+  const [bus, route] = await Promise.all([
+    Bus.findOne({ _id: busId, tenantId }),
+    Route.findOne({ _id: routeId, tenantId }),
+  ]);
+  if (!bus) return res.status(404).json({ message: "Bus not found for this tenant" });
+  if (!route) return res.status(404).json({ message: "Route not found for this tenant" });
+
+  const existing = await Schedule.find({
+    tenantId,
+    busId,
+    routeId,
+    departureTime: { $in: dates.map((ms) => new Date(ms)) },
+  }).select("departureTime");
+  const existingSet = new Set(existing.map((s) => s.departureTime.getTime()));
+
+  const seatNumbers = Array.from({ length: bus.totalSeats }, (_, i) => i + 2); // seat 1 = driver
+  const minutes = Number(durationMinutes) > 0 ? Number(durationMinutes) : null;
+
+  const docs = dates
+    .filter((ms) => !existingSet.has(ms))
+    .map((ms) => ({
+      tenantId,
+      busId,
+      routeId,
+      departureTime: new Date(ms),
+      arrivalTime: minutes ? new Date(ms + minutes * 60000) : undefined,
+      availableSeats: [...seatNumbers],
+    }));
+
+  if (docs.length > 0) await Schedule.insertMany(docs);
+  res.status(201).json({ created: docs.length, skipped: dates.length - docs.length });
+};
+
 exports.listSchedules = async (req, res) => {
   const schedules = await Schedule.find({ tenantId: req.user.tenantId }).populate("busId routeId");
   res.json(schedules);
@@ -368,6 +422,8 @@ exports.createCounterSale = async (req, res) => {
       ticketCode,
       farePaid,
       bookingSource: "Counter",
+      soldBy: req.user.id,
+      soldByName: req.user.fullName,
       paymentStatus: "Paid",
       paymentReference: method === "Cash" ? "CASH" : paymentReference?.trim() || "MOBILE_MONEY_COUNTER",
       holdExpiresAt: new Date(), // not used for an already-paid sale; the field is required by the schema

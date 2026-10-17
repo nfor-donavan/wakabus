@@ -171,6 +171,32 @@ The Agency Admin's **Counter sales** tab is how agents sell to walk-in customers
 - Endpoints: `POST /api/agency/counter-sales`, `GET /api/agency/bookings/:id/ticket-pdf`.
   This adds one backend dependency, `qrcode` (Render installs it on the next deploy).
 
+## Staff accounts, roles and the sales report
+
+- **Cashiers use the Agency Admin portal.** They log in with their own account (role
+  `counter_agent`), sell tickets in **Counter sales**, and also see Schedules (view, block
+  seats, change status), Bookings, Packages, Rentals and their own **Sales report**.
+  Fleet, Routes and Staff are hidden from them, and the server refuses those actions anyway.
+- The **agency admin** adds and removes staff in the **Staff** tab: create an account with an
+  email and password (min. 8 characters), reset a password, or deactivate someone. Deactivation
+  takes effect immediately. The server checks the account on every request, so a signed-in
+  cashier is locked out straight away instead of staying valid until their session expires.
+- Every counter sale records **who sold it**. The **Sales report** shows tickets, total, cash
+  and Mobile Money for a day or date range. A cashier sees only their own sales; the admin sees
+  everyone, can filter by cashier, and can download a CSV for end-of-day cash checks. Counter
+  sales made before this update appear as "Before tracking started".
+- Endpoints: `GET/POST /api/agency/staff`, `PATCH /api/agency/staff/:id` (admin only),
+  `GET /api/agency/reports/sales`.
+
+## Creating trips in bulk
+
+Trips are created ahead of time by the admin, not by cashiers on the day. In **Schedules**, the
+**Create trips for several days** card takes a bus, a route, departure times (for example
+`06:00, 08:30, 14:00`), a first day, a number of days (up to 31) and the weekdays to run. It
+creates every trip at once and skips any that already exist, so it is safe to re-run weekly.
+Departure times are built in the browser's time zone, and times already in the past are skipped.
+Endpoint: `POST /api/agency/schedules/bulk` (admin only).
+
 ## Manifest PDF
 
 The checkpoint manifest is now a proper bilingual (English/French) A4 document: company header
